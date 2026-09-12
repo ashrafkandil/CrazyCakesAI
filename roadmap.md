@@ -1,4 +1,4 @@
-- [x] Recreate Frosted Cake Art homepage structure and interactions
+- [x] Recreate Crazy Cake Art homepage structure and interactions
 - [x] Use original live-site logo and cake imagery
 - [x] Verify and match exact live-site font families, weights, and styling
 - [x] Validate desktop and mobile rendering
