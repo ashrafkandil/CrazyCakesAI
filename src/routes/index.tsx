@@ -144,6 +144,7 @@ function Index() {
   const visibleItems =
     activeCategory === "All" ? galleryItems : galleryItems.filter((item) => item.category === activeCategory);
   const safeGalleryIndex = galleryIndex % visibleItems.length;
+  const activeGalleryItem = visibleItems[safeGalleryIndex] ?? galleryItems[0];
 
   function changeCategory(category: string) {
     setActiveCategory(category);
@@ -242,7 +243,7 @@ function Index() {
             ))}
           </div>
           <div className="relative mx-auto mt-12 max-w-4xl overflow-hidden rounded-lg bg-muted">
-            <img src={visibleItems[safeGalleryIndex].src} alt={visibleItems[safeGalleryIndex].alt} className="aspect-[4/3] w-full object-cover" />
+            <img src={activeGalleryItem?.src} alt={activeGalleryItem?.alt} className="aspect-[4/3] w-full object-cover" />
             <Button variant="secondary" size="icon" aria-label="Previous gallery image" className="absolute left-4 top-1/2 -translate-y-1/2 bg-background/80" onClick={() => setGalleryIndex((safeGalleryIndex - 1 + visibleItems.length) % visibleItems.length)}><ArrowLeft /></Button>
             <Button variant="secondary" size="icon" aria-label="Next gallery image" className="absolute right-4 top-1/2 -translate-y-1/2 bg-background/80" onClick={() => setGalleryIndex((safeGalleryIndex + 1) % visibleItems.length)}><ArrowRight /></Button>
           </div>

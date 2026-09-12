@@ -19,9 +19,9 @@
  */
 
 @theme inline {
-  --font-sans: "Montserrat", sans-serif;
-  --font-serif: "Cormorant Garamond", serif;
-  --font-script: "Allura", cursive;
+  --font-sans: "Inter", "Helvetica Neue", Arial, sans-serif;
+  --font-serif: "Crimson Text", "Times New Roman", serif;
+  --font-script: "Dancing Script", "Brush Script MT", cursive;
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
