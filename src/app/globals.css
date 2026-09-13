@@ -1,5 +1,5 @@
 @import "tailwindcss" source(none);
-@source "../src";
+@source "../../src";
 @import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
@@ -177,10 +177,6 @@
     background: var(--color-primary);
     color: var(--color-primary-foreground);
   }
-}
-
-html {
-  scroll-behavior: smooth;
 }
 
 @utility form-field {
