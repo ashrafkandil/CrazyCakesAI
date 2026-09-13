@@ -5,7 +5,7 @@ import { useState, type FormEvent } from "react";
 
 import { Button } from "@/components/ui/button";
 
-export function ContactForm() {
+export function ContactForm({ eventTypes = [] }: { eventTypes?: string[] }) {
   const [submitted, setSubmitted] = useState(false);
 
   function submitForm(event: FormEvent<HTMLFormElement>) {
@@ -41,11 +41,9 @@ export function ContactForm() {
             Event Type *
             <select required className="form-field mt-2">
               <option value="">Select event type</option>
-              <option>Wedding</option>
-              <option>Birthday</option>
-              <option>Anniversary</option>
-              <option>Corporate</option>
-              <option>Other</option>
+              {eventTypes.map((label) => (
+                <option key={label}>{label}</option>
+              ))}
             </select>
           </label>
           <label className="text-sm font-medium">

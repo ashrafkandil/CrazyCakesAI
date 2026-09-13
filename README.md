@@ -1,6 +1,6 @@
-# Crazy Cakes — Crazy Cake Art
+# Crazy Cakes — Marwa Crazy Cakes
 
-A single-page marketing site for Crazy Cake Art (custom cakes & edible art, Chagrin Falls, Ohio). Created by Ashraf Kandil, built with Next.js (App Router), React 19, Tailwind CSS 4 and shadcn/ui.
+A single-page marketing site for Marwa Crazy Cakes (custom cakes & edible art, Chagrin Falls, Ohio). Created by Ashraf Kandil, built with Next.js (App Router), React 19, Tailwind CSS 4 and shadcn/ui.
 
 ## Requirements
 

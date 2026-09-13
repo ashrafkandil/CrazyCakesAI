@@ -8,6 +8,7 @@
     "dev:server": "next dev",
     "build": "next build",
     "start": "next start",
+    "db:seed": "node scripts/seed.mjs",
     "lint": "eslint .",
     "format": "prettier --write ."
   },

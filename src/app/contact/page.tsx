@@ -1,17 +1,23 @@
-import { CalendarDays, Clock3, Mail, MapPin, Phone } from "lucide-react";
+import { CalendarDays, Mail, MapPin, Phone, Share2 } from "lucide-react";
 import type { Metadata } from "next";
 
 import { ContactForm } from "@/app/contact/contact-form";
 import { SectionHeading } from "@/app/section-heading";
+import { SocialLinks } from "@/app/social-links";
+import { getEventTypes } from "@/lib/data";
 
 export const metadata: Metadata = {
-  title: "Contact | Crazy Cake Art",
+  title: "Contact | Marwa Crazy Cakes",
   description:
-    "Request a custom cake quote from Crazy Cake Art in Chagrin Falls, Ohio. Phone, email and order form.",
+    "Request a custom cake quote from Marwa Crazy Cakes in Chagrin Falls, Ohio. Phone, email and order form.",
   alternates: { canonical: "/contact" },
 };
 
+export const revalidate = 300;
+
 export default function ContactPage() {
+  const eventTypes = getEventTypes();
+
   return (
     <section className="bg-blush px-5 py-20 sm:py-28">
       <div className="mx-auto max-w-6xl">
@@ -24,7 +30,7 @@ export default function ContactPage() {
           special celebration.
         </p>
         <div className="mt-14 grid gap-12 lg:grid-cols-[1.3fr_.7fr]">
-          <ContactForm />
+          <ContactForm eventTypes={eventTypes} />
           <aside>
             <h2 className="font-serif text-2xl font-semibold text-primary">Get in Touch</h2>
             <div className="mt-7 space-y-5 text-muted-foreground">
@@ -44,22 +50,9 @@ export default function ContactPage() {
               </p>
             </div>
             <h3 className="mt-10 flex items-center gap-3 font-serif text-xl font-semibold">
-              <Clock3 className="h-5 w-5 text-primary" /> Business Hours
+              <Share2 className="h-5 w-5 text-primary" /> Follow Us
             </h3>
-            <dl className="mt-5 space-y-3 text-sm text-muted-foreground">
-              <div className="flex justify-between">
-                <dt>Mon–Fri</dt>
-                <dd>9:00 AM – 6:00 PM</dd>
-              </div>
-              <div className="flex justify-between">
-                <dt>Saturday</dt>
-                <dd>10:00 AM – 4:00 PM</dd>
-              </div>
-              <div className="flex justify-between">
-                <dt>Sunday</dt>
-                <dd>By Appointment Only</dd>
-              </div>
-            </dl>
+            <SocialLinks variant="pill" className="mt-4" />
             <p className="mt-8 flex gap-3 rounded-lg bg-background p-5 text-sm leading-6 text-muted-foreground">
               <CalendarDays className="h-5 w-5 shrink-0 text-primary" /> We&apos;ll respond to your
               inquiry within 24 hours. For urgent requests, please call us directly.

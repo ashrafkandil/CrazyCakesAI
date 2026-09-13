@@ -17,6 +17,11 @@ out
 next-env.d.ts
 *.local
 
+# SQLite database (regenerate with: npm run db:seed)
+/data/*.db
+/data/*.db-wal
+/data/*.db-shm
+
 # Wrangler / Cloudflare
 .wrangler/
 .dev.vars

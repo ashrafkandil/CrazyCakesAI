@@ -7,11 +7,11 @@ import { SiteHeader } from "@/app/site-header";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Crazy Cake Art",
+  title: "Marwa Crazy Cakes",
   description: "Custom cakes and edible art in Chagrin Falls, Ohio.",
-  authors: [{ name: "Crazy Cake Art" }],
+  authors: [{ name: "Marwa Crazy Cakes" }],
   openGraph: {
-    title: "Crazy Cake Art",
+    title: "Marwa Crazy Cakes",
     description: "Luxury cakes sculpted into unforgettable works of art.",
     type: "website",
   },

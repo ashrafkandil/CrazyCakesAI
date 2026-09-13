@@ -1,6 +1,7 @@
 "use client";
 
 import { Menu, X } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -49,9 +50,12 @@ export function SiteHeader() {
           aria-label="Go to home"
           className="absolute left-1/2 top-1 -translate-x-1/2 rounded-full"
         >
-          <img
+          <Image
             src="/assets/crazy/logo.png"
-            alt="Crazy Cake Art"
+            alt="Marwa Crazy Cakes"
+            width={84}
+            height={84}
+            priority
             className="h-[72px] w-[72px] rounded-full bg-background object-contain sm:h-[84px] sm:w-[84px]"
           />
         </Link>

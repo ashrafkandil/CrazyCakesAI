@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
@@ -6,9 +7,9 @@ import { prices } from "@/app/site-data";
 import { SectionHeading } from "@/app/section-heading";
 
 export const metadata: Metadata = {
-  title: "Pricing | Crazy Cake Art",
+  title: "Pricing | Marwa Crazy Cakes",
   description:
-    "Starting prices for custom cakes, sculpted cakes, wedding cakes and cupcakes by Crazy Cake Art.",
+    "Starting prices for custom cakes, sculpted cakes, wedding cakes and cupcakes by Marwa Crazy Cakes.",
   alternates: { canonical: "/pricing" },
 };
 
@@ -42,12 +43,16 @@ export default function PricingPage() {
               </Button>
             </div>
           </div>
-          <img
-            src="/assets/crazy/pricing.jpg"
-            alt="Elegant wedding cake with multiple tiers and decorative elements"
-            className="aspect-[4/5] w-full rounded-lg object-cover shadow-lg"
-            loading="lazy"
-          />
+          <div className="relative aspect-[4/5] w-full overflow-hidden rounded-lg shadow-lg">
+            <Image
+              src="/assets/crazy/pricing.jpg"
+              alt="Elegant wedding cake with multiple tiers and decorative elements"
+              fill
+              sizes="(max-width: 768px) 100vw, 50vw"
+              className="object-cover"
+              loading="lazy"
+            />
+          </div>
         </div>
       </div>
     </section>

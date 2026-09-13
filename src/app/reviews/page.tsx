@@ -1,23 +1,30 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 
 import { Button } from "@/components/ui/button";
-import { reviews } from "@/app/site-data";
+import { getTestimonials } from "@/lib/data";
 
 export const metadata: Metadata = {
-  title: "Reviews & Testimonials | Crazy Cake Art",
+  title: "Reviews & Testimonials | Marwa Crazy Cakes",
   description:
-    "Read client testimonials and reviews for Crazy Cake Art, custom cake designers in Chagrin Falls, Ohio.",
+    "Read client testimonials and reviews for Marwa Crazy Cakes, custom cake designers in Chagrin Falls, Ohio.",
   alternates: { canonical: "/reviews" },
 };
 
+export const revalidate = 300;
+
 export default function ReviewsPage() {
+  const testimonials = getTestimonials();
+
   return (
     <>
       <section className="relative flex min-h-80 items-center justify-center overflow-hidden px-5 py-20 text-primary-foreground">
-        <img
+        <Image
           src="/assets/crazy/awards.jpg"
           alt="Celebrating excellence in cake artistry"
-          className="absolute inset-0 h-full w-full object-cover"
+          fill
+          sizes="100vw"
+          className="object-cover"
         />
         <div className="absolute inset-0 bg-overlay" />
         <header className="relative max-w-3xl text-center">
@@ -33,7 +40,7 @@ export default function ReviewsPage() {
       <section className="bg-blush px-5 py-20 sm:py-28">
         <div className="mx-auto max-w-6xl">
           <p className="mx-auto max-w-4xl text-center text-lg leading-8 text-muted-foreground">
-            Founded by Seema Acharya, Crazy Cake Art in Chagrin Falls, OH has been honored with
+            Founded by Seema Acharya, Marwa Crazy Cakes in Chagrin Falls, OH has been honored with
             national awards, television appearances, and features in leading publications. Our
             clients' testimonials are a testament to artistry, innovation, and dedication to
             crafting unforgettable cakes.
@@ -42,12 +49,12 @@ export default function ReviewsPage() {
             Client Reviews
           </h2>
           <p className="mt-3 text-center text-lg text-muted-foreground">
-            Hear what our clients say about their experience with Crazy Cake Art
+            Hear what our clients say about their experience with Marwa Crazy Cakes
           </p>
           <div className="mt-9 grid gap-5 md:grid-cols-3">
-            {reviews.map((review) => (
+            {testimonials.map((review) => (
               <article
-                key={review.name}
+                key={review.id}
                 className="rounded-lg border border-border bg-background p-6"
               >
                 <div className="flex items-start gap-3">
@@ -55,10 +62,16 @@ export default function ReviewsPage() {
                     {review.initials}
                   </span>
                   <div>
-                    <h3 className="font-semibold text-primary">{review.name}</h3>
+                    <h3 className="font-semibold text-primary">{review.author}</h3>
                     <p className="text-xs text-muted-foreground">{review.date}</p>
                   </div>
-                  <span className="ml-auto text-sm text-gold">★★★★★</span>
+                  <span
+                    className="ml-auto text-sm text-gold"
+                    aria-label={`${review.rating} out of 5 stars`}
+                  >
+                    {"★".repeat(review.rating)}
+                    <span className="sr-only">{`/ ${review.rating}`}</span>
+                  </span>
                 </div>
                 <p className="mt-5 text-sm italic leading-7 text-muted-foreground">
                   “{review.quote}”
@@ -69,7 +82,7 @@ export default function ReviewsPage() {
           <div className="mt-10 text-center">
             <Button asChild>
               <a
-                href="https://www.google.com/search?q=Crazy+Cake+Art+Reviews"
+                href="https://www.google.com/search?q=Marwa+Crazy+Cakes+Reviews"
                 target="_blank"
                 rel="noreferrer"
               >
