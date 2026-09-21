@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import Image from "next/image";
 
 import { Button } from "@/components/ui/button";
-import { getTestimonials } from "@/lib/data";
+import { text } from "@/lib/content";
+import { getContent, getTestimonials } from "@/lib/data";
 
 export const metadata: Metadata = {
   title: "Reviews & Testimonials | Marwa Crazy Cakes",
@@ -14,6 +15,7 @@ export const metadata: Metadata = {
 export const revalidate = 300;
 
 export default function ReviewsPage() {
+  const content = getContent();
   const testimonials = getTestimonials();
 
   return (
@@ -28,28 +30,25 @@ export default function ReviewsPage() {
         />
         <div className="absolute inset-0 bg-overlay" />
         <header className="relative max-w-3xl text-center">
-          <h1 className="font-script text-4xl sm:text-5xl">Reviews & Testimonials</h1>
+          <h1 className="font-script text-4xl sm:text-5xl">{text(content, "reviews.hero.title")}</h1>
           <p className="mt-3 font-serif text-xs uppercase tracking-[0.24em]">
-            Celebrating excellence in sugar artistry
+            {text(content, "reviews.hero.subtitle")}
           </p>
           <p className="mt-6 text-lg">
-            Our dedication to craft is celebrated across every platform and occasion.
+            {text(content, "reviews.hero.body")}
           </p>
         </header>
       </section>
       <section className="bg-blush px-5 py-20 sm:py-28">
         <div className="mx-auto max-w-6xl">
           <p className="mx-auto max-w-4xl text-center text-lg leading-8 text-muted-foreground">
-            Founded by Seema Acharya, Marwa Crazy Cakes in Chagrin Falls, OH has been honored with
-            national awards, television appearances, and features in leading publications. Our
-            clients' testimonials are a testament to artistry, innovation, and dedication to
-            crafting unforgettable cakes.
+            {text(content, "reviews.intro")}
           </p>
           <h2 className="mt-14 text-center font-serif text-3xl font-semibold italic text-primary">
-            Client Reviews
+            {text(content, "reviews.sectionTitle")}
           </h2>
           <p className="mt-3 text-center text-lg text-muted-foreground">
-            Hear what our clients say about their experience with Marwa Crazy Cakes
+            {text(content, "reviews.sectionSubtitle")}
           </p>
           <div className="mt-9 grid gap-5 md:grid-cols-3">
             {testimonials.map((review) => (
@@ -86,7 +85,7 @@ export default function ReviewsPage() {
                 target="_blank"
                 rel="noreferrer"
               >
-                ★ Read More Reviews on Google ★
+                {text(content, "reviews.googleLinkText")}
               </a>
             </Button>
           </div>

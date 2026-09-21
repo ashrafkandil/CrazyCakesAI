@@ -57,7 +57,7 @@ export function HeroCarousel({ content }: { content: SiteContent }) {
         <ArrowRight />
       </Button>
       <div className="relative z-10 mx-auto max-w-4xl px-8 py-20 text-center text-primary-foreground">
-        <h1 className="font-script text-5xl leading-tight sm:text-7xl">
+        <h1 className="whitespace-nowrap font-script text-4xl leading-tight sm:text-6xl lg:text-7xl">
           {text(content, "home.hero.title")}
         </h1>
         <p className="mx-auto mt-6 max-w-2xl font-serif text-xs uppercase tracking-[0.21em] sm:text-sm">
