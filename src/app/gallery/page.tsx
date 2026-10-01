@@ -1,26 +1,32 @@
 import type { Metadata } from "next";
+import { randomUUID } from "node:crypto";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 import { GalleryGrid } from "@/app/gallery/gallery-grid";
+import { VideoGrid } from "@/app/gallery/video-grid";
 import { SectionHeading } from "@/app/section-heading";
-import { getGallery } from "@/lib/data";
+import { text } from "@/lib/content";
+import { getContent, getGallery } from "@/lib/data";
 
-export const metadata: Metadata = {
-  title: "Gallery | Marwa Crazy Cakes",
-  description:
-    "Explore custom sculpted cakes, wedding cakes, kids cakes, cupcakes and edible art by Marwa Crazy Cakes.",
-  alternates: { canonical: "/gallery" },
-};
+export function generateMetadata(): Metadata {
+  const content = getContent();
+  return {
+    title: `${text(content, "gallery.title")} | Marwa Crazy Cakes`,
+    description: text(content, "gallery.description"),
+    alternates: { canonical: "/gallery" },
+  };
+}
 
 export const revalidate = 300;
 
-type SearchParams = Promise<{ cat?: string; page?: string }>;
+type SearchParams = Promise<{ cat?: string; page?: string; shuffle?: string }>;
 
-function hrefFor(category: string, page: number) {
+function hrefFor(category: string, page: number, shuffle?: string) {
   const params = new URLSearchParams();
   if (category !== "all") params.set("cat", category);
   if (page > 1) params.set("page", String(page));
+  if (category === "all" && shuffle) params.set("shuffle", shuffle);
   const query = params.toString();
   return query ? `/gallery?${query}` : "/gallery";
 }
@@ -36,27 +42,42 @@ function pillClass(isActive: boolean) {
 export default async function GalleryPage({ searchParams }: { searchParams: SearchParams }) {
   const params = await searchParams;
   const category = params.cat && params.cat !== "all" ? params.cat : "all";
+  const shuffleSeed = category === "all" ? params.shuffle || randomUUID() : undefined;
   const requestedPage = Number.parseInt(params.page ?? "", 10);
   const gallery = getGallery({
     category: category === "all" ? undefined : category,
     page: Number.isFinite(requestedPage) ? requestedPage : 1,
+    shuffleSeed,
   });
+  const content = getContent();
+  const labels = {
+    close: text(content, "gallery.closeImage"),
+    previous: text(content, "gallery.previousImage"),
+    next: text(content, "gallery.nextImage"),
+  };
+  const videoLabels = {
+    close: text(content, "gallery.closeVideo"),
+    previous: text(content, "gallery.previousVideo"),
+    next: text(content, "gallery.nextVideo"),
+  };
 
   return (
     <section className="px-5 py-20 sm:py-28">
       <div className="mx-auto max-w-6xl">
-        <SectionHeading title="Our Gallery" eyebrow="Portfolio of custom creations" />
+        <SectionHeading
+          title={text(content, "gallery.title")}
+          eyebrow={text(content, "gallery.eyebrow")}
+        />
         <p className="mx-auto mt-6 max-w-3xl text-center text-base leading-7">
-          Explore our portfolio of custom creations, each one unique and crafted with passion. From
-          intimate celebrations to grand events, see how we bring visions to life.
+          {text(content, "gallery.description")}
         </p>
 
         <nav
-          aria-label="Gallery categories"
+          aria-label={text(content, "gallery.categoriesLabel")}
           className="mt-10 flex flex-wrap items-center justify-center gap-2"
         >
           <Link href={hrefFor("all", 1)} className={pillClass(gallery.activeCategory === "all")}>
-            All
+            {text(content, "gallery.allCategory")}
           </Link>
           {gallery.categories.map((item) => (
             <Link
@@ -72,51 +93,67 @@ export default async function GalleryPage({ searchParams }: { searchParams: Sear
 
         {gallery.images.length === 0 ? (
           <p className="mt-16 text-center text-muted-foreground">
-            No cakes in this category yet — check back soon!
+            {text(content, "gallery.empty")}
           </p>
         ) : (
-          <GalleryGrid images={gallery.images} />
+          <GalleryGrid images={gallery.images} labels={labels} />
         )}
 
         {gallery.pageCount > 1 && (
           <nav
-            aria-label="Gallery pagination"
+            aria-label={text(content, "gallery.paginationLabel")}
             className="mt-12 flex items-center justify-center gap-4 text-sm"
           >
             {gallery.page > 1 ? (
               <Link
-                href={hrefFor(gallery.activeCategory, gallery.page - 1)}
+                href={hrefFor(gallery.activeCategory, gallery.page - 1, shuffleSeed)}
                 className="rounded-md bg-secondary px-4 py-2 text-secondary-foreground hover:bg-secondary/80"
               >
-                ‹ Previous
+                {text(content, "gallery.previous")}
               </Link>
             ) : (
               <span aria-hidden="true" className="px-4 py-2 text-muted-foreground/50">
-                ‹ Previous
+                {text(content, "gallery.previous")}
               </span>
             )}
             <span aria-live="polite" className="text-muted-foreground">
-              Page {gallery.page} of {gallery.pageCount} · {gallery.total} cakes
+              {text(content, "gallery.pageStatus")
+                .replace("{page}", String(gallery.page))
+                .replace("{pageCount}", String(gallery.pageCount))
+                .replace("{total}", String(gallery.total))}
             </span>
             {gallery.page < gallery.pageCount ? (
               <Link
-                href={hrefFor(gallery.activeCategory, gallery.page + 1)}
+                href={hrefFor(gallery.activeCategory, gallery.page + 1, shuffleSeed)}
                 className="rounded-md bg-secondary px-4 py-2 text-secondary-foreground hover:bg-secondary/80"
               >
-                Next ›
+                {text(content, "gallery.next")}
               </Link>
             ) : (
               <span aria-hidden="true" className="px-4 py-2 text-muted-foreground/50">
-                Next ›
+                {text(content, "gallery.next")}
               </span>
             )}
           </nav>
         )}
 
+        {gallery.videos.length > 0 && (
+          <section className="mt-20 border-t border-border pt-14">
+            <SectionHeading
+              title={text(content, "gallery.videoTitle")}
+              eyebrow={text(content, "gallery.videoEyebrow")}
+            />
+            <p className="mx-auto mt-6 max-w-2xl text-center text-base leading-7">
+              {text(content, "gallery.videoDescription")}
+            </p>
+            <VideoGrid videos={gallery.videos} labels={videoLabels} />
+          </section>
+        )}
+
         <div className="mt-14 text-center">
-          <p className="text-muted-foreground">Ready to create your own masterpiece?</p>
+          <p className="text-muted-foreground">{text(content, "gallery.ctaText")}</p>
           <Button asChild className="mt-5">
-            <Link href="/contact">Start Your Custom Order</Link>
+            <Link href="/contact">{text(content, "gallery.ctaLabel")}</Link>
           </Button>
         </div>
       </div>

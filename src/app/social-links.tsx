@@ -1,14 +1,18 @@
-import { Instagram } from "lucide-react";
+import { Facebook, Globe, Instagram } from "lucide-react";
 import type { ReactNode } from "react";
 
-import { socialLinks } from "@/app/site-data";
+import { getSocialLinks } from "@/lib/data";
 
 const brandIcons: Record<string, { display: string; icon: ReactNode }> = {
-  Instagram: {
+  instagram: {
     display: "Instagram",
     icon: <Instagram className="h-4 w-4" aria-hidden="true" />,
   },
-  TikTok: {
+  facebook: {
+    display: "Facebook",
+    icon: <Facebook className="h-4 w-4" aria-hidden="true" />,
+  },
+  tiktok: {
     display: "TikTok",
     icon: (
       <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" className="h-4 w-4">
@@ -16,7 +20,7 @@ const brandIcons: Record<string, { display: string; icon: ReactNode }> = {
       </svg>
     ),
   },
-  X: {
+  x: {
     display: "X (Twitter)",
     icon: (
       <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" className="h-4 w-4">
@@ -39,14 +43,20 @@ export function SocialLinks({
   variant?: keyof typeof variants;
   className?: string;
 }) {
+  const socialLinks = getSocialLinks();
+
   return (
     <div className={`flex flex-wrap items-center gap-3 ${className}`}>
       {socialLinks.map((social) => {
-        const brand = brandIcons[social.label];
-        if (!brand) return null;
+        const key = social.icon.toLowerCase();
+        const brand = brandIcons[key] ?? {
+          display: social.label,
+          icon: <Globe className="h-4 w-4" aria-hidden="true" />,
+        };
+
         return (
           <a
-            key={social.label}
+            key={social.id}
             href={social.href}
             target="_blank"
             rel="noreferrer"

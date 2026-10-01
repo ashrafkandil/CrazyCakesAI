@@ -15,7 +15,7 @@ export default function Error({
   }, [error]);
 
   return (
-    <div className="flex min-h-[70svh] items-center justify-center bg-background px-4 py-20">
+    <div className="flex min-h-[70svh] items-center justify-center bg-transparent px-4 py-20">
       <div className="max-w-md text-center">
         <h1 className="text-xl font-semibold tracking-tight text-foreground">
           This page didn&apos;t load

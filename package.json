@@ -9,6 +9,7 @@
     "build": "next build",
     "start": "next start",
     "db:seed": "node scripts/seed.mjs",
+    "db:import-images": "node scripts/import-gallery-images.mjs",
     "lint": "eslint .",
     "format": "prettier --write ."
   },

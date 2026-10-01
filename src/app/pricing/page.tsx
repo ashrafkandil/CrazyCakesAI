@@ -3,10 +3,10 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
-import { prices } from "@/app/site-data";
 import { SectionHeading } from "@/app/section-heading";
 import { text } from "@/lib/content";
 import { getContent } from "@/lib/data";
+import { versionedImageUrl } from "@/lib/image-url";
 
 export const metadata: Metadata = {
   title: "Pricing | Marwa Crazy Cakes",
@@ -19,6 +19,7 @@ export const revalidate = 300;
 
 export default function PricingPage() {
   const content = getContent();
+  const priceItems = ["custom", "sculpted", "wedding", "cupcakes"] as const;
 
   return (
     <section className="px-5 py-20 sm:py-28">
@@ -29,14 +30,16 @@ export default function PricingPage() {
         />
         <div className="mt-14 grid items-center gap-12 md:grid-cols-2">
           <div>
-            <p className="leading-8 text-muted-foreground">
-              {text(content, "pricing.intro")}
-            </p>
+            <p className="leading-8 text-muted-foreground">{text(content, "pricing.intro")}</p>
             <div className="mt-8 divide-y divide-border border-y border-border">
-              {prices.map(([label, price]) => (
-                <div key={label} className="flex items-center justify-between py-5">
-                  <span className="font-serif text-lg">{label}</span>
-                  <strong className="text-primary">{price}</strong>
+              {priceItems.map((item) => (
+                <div key={item} className="flex items-center justify-between py-5">
+                  <span className="font-serif text-lg">
+                    {text(content, `pricing.item.${item}.label`)}
+                  </span>
+                  <strong className="text-primary">
+                    {text(content, `pricing.item.${item}.price`)}
+                  </strong>
                 </div>
               ))}
             </div>
@@ -49,7 +52,7 @@ export default function PricingPage() {
           </div>
           <div className="relative aspect-[4/5] w-full overflow-hidden rounded-lg shadow-lg">
             <Image
-              src="/assets/crazy/pricing.jpg"
+              src={versionedImageUrl("/assets/crazy/pricing.jpeg")}
               alt={text(content, "pricing.imageAlt")}
               fill
               sizes="(max-width: 768px) 100vw, 50vw"

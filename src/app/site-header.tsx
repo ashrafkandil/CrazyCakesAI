@@ -15,7 +15,7 @@ function linkClass(isActive: boolean) {
   }`;
 }
 
-export function SiteHeader() {
+export function SiteHeader({ logoSrc }: { logoSrc: string }) {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -28,7 +28,7 @@ export function SiteHeader() {
   }
 
   return (
-    <header className="fixed inset-x-0 top-0 z-50 border-b border-border/60 bg-background/95 shadow-sm backdrop-blur">
+    <header className="fixed inset-x-0 top-0 z-50 border-b border-border/60 bg-background/40 shadow-sm backdrop-blur">
       <nav
         aria-label="Main navigation"
         className="relative mx-auto flex h-[76px] max-w-4xl items-center justify-between px-5 sm:h-[88px]"
@@ -51,12 +51,12 @@ export function SiteHeader() {
           className="absolute left-1/2 top-1 -translate-x-1/2 rounded-full"
         >
           <Image
-            src="/assets/crazy/logo.png"
+            src={logoSrc}
             alt="Marwa Crazy Cakes"
             width={84}
             height={84}
             priority
-            className="h-[72px] w-[72px] rounded-full bg-background object-contain sm:h-[84px] sm:w-[84px]"
+            className="h-[72px] w-[72px] rounded-full bg-background/50 object-contain sm:h-[84px] sm:w-[84px]"
           />
         </Link>
         <div className="hidden flex-1 items-center gap-8 pl-16 md:flex">

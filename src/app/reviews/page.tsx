@@ -4,6 +4,7 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { text } from "@/lib/content";
 import { getContent, getTestimonials } from "@/lib/data";
+import { versionedImageUrl } from "@/lib/image-url";
 
 export const metadata: Metadata = {
   title: "Reviews & Testimonials | Marwa Crazy Cakes",
@@ -22,24 +23,24 @@ export default function ReviewsPage() {
     <>
       <section className="relative flex min-h-80 items-center justify-center overflow-hidden px-5 py-20 text-primary-foreground">
         <Image
-          src="/assets/crazy/awards.jpg"
+          src={versionedImageUrl("/assets/crazy/Testimony.png")}
           alt="Celebrating excellence in cake artistry"
           fill
           sizes="100vw"
           className="object-cover"
         />
         <div className="absolute inset-0 bg-overlay" />
-        <header className="relative max-w-3xl text-center">
-          <h1 className="font-script text-4xl sm:text-5xl">{text(content, "reviews.hero.title")}</h1>
-          <p className="mt-3 font-serif text-xs uppercase tracking-[0.24em]">
-            {text(content, "reviews.hero.subtitle")}
-          </p>
-          <p className="mt-6 text-lg">
-            {text(content, "reviews.hero.body")}
-          </p>
+         <header className="relative max-w-3xl text-center">
+           <h1 className="font-script text-4xl sm:text-5xl text-primary">
+             {text(content, "reviews.hero.title")}
+           </h1>
+           <p className="mt-3 font-serif text-xs uppercase tracking-[0.24em] text-primary">
+             {text(content, "reviews.hero.subtitle")}
+           </p>
+           <p className="mt-6 text-lg text-primary">{text(content, "reviews.hero.body")}</p>
         </header>
       </section>
-      <section className="bg-blush px-5 py-20 sm:py-28">
+      <section className="bg-transparent px-5 py-20 sm:py-28">
         <div className="mx-auto max-w-6xl">
           <p className="mx-auto max-w-4xl text-center text-lg leading-8 text-muted-foreground">
             {text(content, "reviews.intro")}

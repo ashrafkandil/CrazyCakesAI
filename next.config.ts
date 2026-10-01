@@ -6,6 +6,9 @@ const root = path.dirname(fileURLToPath(import.meta.url));
 
 const nextConfig: NextConfig = {
   devIndicators: false,
+  images: {
+    localPatterns: [{ pathname: "/assets/crazy/**" }],
+  },
   turbopack: { root },
 };
 

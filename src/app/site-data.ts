@@ -20,15 +20,9 @@ export const heroImages = [
   },
 ];
 
-export const prices = [
-  ["Custom Cakes", "$150 & up"],
-  ["Sculpted Cakes", "$300 & up"],
-  ["Wedding Cakes", "$500 & up"],
-  ["Cupcakes (per dozen)", "$40 & up"],
-];
-
 export const socialLinks = [
   { label: "Instagram", href: "https://www.instagram.com/marwacrazycakes/" },
+  { label: "Facebook", href: "https://www.facebook.com/marwacrazycakes" },
   { label: "TikTok", href: "https://www.tiktok.com/@marwacrazycakes" },
   { label: "X", href: "https://x.com/marwacrazycakes" },
 ] as const;

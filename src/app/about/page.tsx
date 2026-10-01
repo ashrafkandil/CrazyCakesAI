@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { SectionHeading } from "@/app/section-heading";
 import { text } from "@/lib/content";
 import { getContent } from "@/lib/data";
+import { versionedImageUrl } from "@/lib/image-url";
 
 export const metadata: Metadata = {
   title: "About Us | Marwa Crazy Cakes",
@@ -20,7 +21,7 @@ export default function AboutPage() {
   const content = getContent();
 
   return (
-    <section className="bg-blush px-5 py-20 sm:py-28">
+    <section className="bg-transparent px-5 py-20 sm:py-28">
       <div className="mx-auto max-w-6xl">
         <SectionHeading
           title={text(content, "about.title")}
@@ -36,7 +37,7 @@ export default function AboutPage() {
           </div>
           <div className="relative mx-auto aspect-square w-full max-w-md overflow-hidden rounded-lg border-8 border-background shadow-lg">
             <Image
-              src="/assets/crazy/seema.png"
+              src={versionedImageUrl("/assets/crazy/Marwa.png")}
               alt={text(content, "about.imageAlt")}
               fill
               sizes="(max-width: 768px) 90vw, 40vw"

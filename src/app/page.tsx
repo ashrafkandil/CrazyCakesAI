@@ -1,3 +1,4 @@
+// ArrowRight was previously used in the hero section and is no longer needed.
 import { ArrowRight } from "lucide-react";
 import Image from "next/image";
 import type { Metadata } from "next";
@@ -6,8 +7,10 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { HeroCarousel } from "@/app/hero-carousel";
 import { SectionHeading } from "@/app/section-heading";
+import { heroImages } from "@/app/site-data";
 import { text } from "@/lib/content";
 import { getContent } from "@/lib/data";
+import { versionedImageUrl } from "@/lib/image-url";
 
 export const metadata: Metadata = {
   title: "Marwa Crazy Cakes | Custom Cakes & Desserts",
@@ -28,39 +31,70 @@ const destinationConfig = [
   {
     id: "about",
     href: "/about",
-    image: "/assets/crazy/seema.png",
+    image: "/assets/crazy/Marwa.png",
   },
   {
     id: "gallery",
     href: "/gallery",
-    image: "/assets/crazy/celebration-1.jpg",
+    image: "/assets/crazy/celebration-1.JPEG",
   },
   {
     id: "reviews",
     href: "/reviews",
-    image: "/assets/crazy/awards.jpg",
+    image: "/assets/crazy/Testimony.png",
   },
   {
     id: "pricing",
     href: "/pricing",
-    image: "/assets/crazy/pricing.jpg",
+    image: "/assets/crazy/pricing.jpeg",
   },
 ];
 
 export default async function HomePage() {
   const content = getContent();
+  const versionedHeroImages = heroImages.map((image) => ({
+    ...image,
+    src: versionedImageUrl(image.src),
+  }));
   const destinations = destinationConfig.map((item) => ({
     ...item,
+    image: versionedImageUrl(item.image),
     title: text(content, `home.card.${item.id}.title`),
     alt: text(content, `home.card.${item.id}.alt`),
     blurb: text(content, `home.card.${item.id}.blurb`),
   }));
 
-  return (
-    <>
-      <HeroCarousel content={content} />
+   return (
+       <> 
+       <HeroCarousel images={versionedHeroImages} />
 
-      <section className="bg-blush px-5 py-24 sm:py-32">
+      {/* Hero text section moved below the carousel */}
+       <section className="bg-transparent px-5 py-6 sm:py-6">
+          <div className="mx-auto max-w-4xl text-center text-primary">
+           <h1 className="whitespace-nowrap font-script text-4xl leading-tight sm:text-6xl lg:text-7xl">
+             {text(content, "home.hero.title")}
+           </h1>
+            <p className="mx-auto mt-6 max-w-2xl font-serif text-xs uppercase tracking-[0.21em] sm:text-sm">
+             {text(content, "home.hero.tagline")}
+           </p>
+            <p className="mx-auto mt-5 max-w-3xl text-base leading-7 sm:text-lg">
+             {text(content, "home.hero.body")}
+           </p>
+          <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
+            <Button asChild size="lg">
+              <Link href="/gallery">{text(content, "home.hero.cta.gallery")}</Link>
+            </Button>
+             <Button
+               asChild
+               size="lg"
+               variant="default"
+             >
+               <Link href="/contact">{text(content, "home.hero.cta.contact")}</Link>
+             </Button>
+          </div>
+        </div>
+      </section>
+       <section className="bg-transparent px-5 py-6 sm:py-6">
         <div className="mx-auto max-w-6xl">
           <SectionHeading
             title={text(content, "home.teaser.title")}
@@ -80,7 +114,7 @@ export default async function HomePage() {
                     alt={item.alt}
                     fill
                     sizes="(max-width: 640px) 100vw, 50vw"
-                    className="object-cover transition-transform duration-500 group-hover:scale-105"
+                    className="object-fill"
                     loading="lazy"
                   />
                 </div>
@@ -101,7 +135,7 @@ export default async function HomePage() {
             </Button>
           </div>
         </div>
-      </section>
-    </>
+       </section>
+     </>
   );
 }

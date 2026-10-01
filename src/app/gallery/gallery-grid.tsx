@@ -6,7 +6,15 @@ import { useEffect, useState } from "react";
 
 import type { GalleryImage } from "@/lib/data";
 
-export function GalleryGrid({ images }: { images: GalleryImage[] }) {
+type GalleryGridLabels = { close: string; previous: string; next: string };
+
+export function GalleryGrid({
+  images,
+  labels,
+}: {
+  images: GalleryImage[];
+  labels: GalleryGridLabels;
+}) {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
 
   useEffect(() => {
@@ -36,14 +44,24 @@ export function GalleryGrid({ images }: { images: GalleryImage[] }) {
             key={item.id}
             type="button"
             onClick={() => setActiveIndex(index)}
-            className="group relative aspect-[4/3] overflow-hidden rounded-lg bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            className="group relative aspect-[4/3] overflow-hidden rounded-lg border-2 border-foreground/70 bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           >
+            <span
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-0 opacity-[0.08]"
+              style={{
+                backgroundImage: "url('/assets/crazy/logo.png')",
+                backgroundPosition: "center",
+                backgroundRepeat: "repeat",
+                backgroundSize: "64px 64px",
+              }}
+            />
             <Image
               src={item.src}
               alt={item.alt}
               fill
               sizes="(max-width: 640px) 50vw, 33vw"
-              className="object-cover transition-transform duration-500 group-hover:scale-105"
+              className="object-contain"
               loading={index < 6 ? "eager" : "lazy"}
             />
             <span className="pointer-events-none absolute inset-x-0 bottom-0 bg-overlay-soft px-3 py-2 text-left text-xs text-primary-foreground opacity-0 transition-opacity group-hover:opacity-100">
@@ -63,7 +81,7 @@ export function GalleryGrid({ images }: { images: GalleryImage[] }) {
         >
           <button
             type="button"
-            aria-label="Close"
+            aria-label={labels.close}
             onClick={() => setActiveIndex(null)}
             className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full bg-overlay-soft text-primary-foreground hover:bg-overlay-strong"
           >
@@ -88,7 +106,7 @@ export function GalleryGrid({ images }: { images: GalleryImage[] }) {
             <div className="mt-4 flex justify-center gap-3">
               <button
                 type="button"
-                aria-label="Previous image"
+                aria-label={labels.previous}
                 onClick={() =>
                   setActiveIndex((index) =>
                     index === null ? index : (index - 1 + images.length) % images.length,
@@ -100,7 +118,7 @@ export function GalleryGrid({ images }: { images: GalleryImage[] }) {
               </button>
               <button
                 type="button"
-                aria-label="Next image"
+                aria-label={labels.next}
                 onClick={() =>
                   setActiveIndex((index) => (index === null ? index : (index + 1) % images.length))
                 }

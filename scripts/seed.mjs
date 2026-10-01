@@ -1,5 +1,5 @@
 import { DatabaseSync } from "node:sqlite";
-import { mkdirSync, readFileSync, existsSync, rmSync } from "node:fs";
+import { mkdirSync, readFileSync, existsSync, readdirSync, rmSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -7,33 +7,42 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const dbDir = path.join(root, "data");
 const dbPath = path.join(dbDir, "crazy-cakes.db");
 
-const galleryItems = [
-  {
-    src: "/assets/crazy/celebration-1.jpg",
-    alt: "Custom architectural celebration cake",
-    category: "Celebrations",
-  },
-  { src: "/assets/crazy/wedding-1.jpg", alt: "Elegant custom wedding cake", category: "Wedding" },
-  {
-    src: "/assets/crazy/sculpted-1.jpg",
-    alt: "Detailed sculpted novelty cake",
-    category: "Sculpted",
-  },
-  { src: "/assets/crazy/kids-1.jpg", alt: "Colorful custom kids cake", category: "Kids" },
-  {
-    src: "/assets/crazy/cupcakes-1.jpg",
-    alt: "Decorated cupcakes and sweet treats",
-    category: "Cupcakes & more",
-  },
-  { src: "/assets/crazy/wedding-2.jpg", alt: "Floral tiered wedding cake", category: "Wedding" },
-  { src: "/assets/crazy/sculpted-2.jpg", alt: "Handcrafted sculpted cake", category: "Sculpted" },
-  { src: "/assets/crazy/kids-2.jpg", alt: "Playful birthday cake", category: "Kids" },
-  {
-    src: "/assets/crazy/celebration-2.jpg",
-    alt: "Special occasion cake",
-    category: "Celebrations",
-  },
-];
+const imageAssetDir = path.join(root, "public", "assets", "crazy");
+const imageExtensions = new Set([".jpg", ".jpeg", ".png", ".webp", ".gif"]);
+const videoAssetDir = path.join(root, "public", "assets", "videos");
+const galleryItems = readdirSync(imageAssetDir, { withFileTypes: true })
+  .filter((entry) => entry.isDirectory())
+  .sort((a, b) => a.name.localeCompare(b.name))
+  .flatMap((categoryDir) =>
+    readdirSync(path.join(imageAssetDir, categoryDir.name), { withFileTypes: true })
+      .filter((file) => file.isFile() && imageExtensions.has(path.extname(file.name).toLowerCase()))
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .map((file) => ({
+        src: `/assets/crazy/${categoryDir.name}/${file.name}`,
+        alt: categoryDir.name,
+        category: categoryDir.name,
+      })),
+  );
+
+if (galleryItems.length === 0) {
+  throw new Error(`No gallery images found under ${imageAssetDir}`);
+}
+
+const videoMetadata = {
+  "cake-detail": { title: "Sculpting the details", category: "Celebrations" },
+  "cake-finish": { title: "The finishing touch", category: "Wedding" },
+};
+const videoItems = readdirSync(videoAssetDir, { withFileTypes: true })
+  .filter((file) => file.isFile() && path.extname(file.name).toLowerCase() === ".mp4")
+  .sort((a, b) => a.name.localeCompare(b.name))
+  .map((file) => {
+    const key = path.parse(file.name).name.replace(/^\d+[_-]?/, "");
+    const details = videoMetadata[key] ?? {
+      title: key.replace(/[-_]+/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase()),
+      category: "Celebrations",
+    };
+    return { src: `/assets/videos/${file.name}`, ...details };
+  });
 
 const testimonials = [
   {
@@ -110,26 +119,68 @@ const content = {
   "reviews.hero.title": "Reviews & Testimonials",
   "reviews.hero.subtitle": "Celebrating excellence in sugar artistry",
   "reviews.hero.body": "Our dedication to craft is celebrated across every platform and occasion.",
-  "reviews.intro": "Founded by Seema Acharya, Marwa Crazy Cakes in Chagrin Falls, OH has been honored with national awards, television appearances, and features in leading publications. Our clients' testimonials are a testament to artistry, innovation, and dedication to crafting unforgettable cakes.",
+  "reviews.intro":
+    "Founded by Seema Acharya, Marwa Crazy Cakes in Chagrin Falls, OH has been honored with national awards, television appearances, and features in leading publications. Our clients' testimonials are a testament to artistry, innovation, and dedication to crafting unforgettable cakes.",
   "reviews.sectionTitle": "Client Reviews",
-  "reviews.sectionSubtitle": "Hear what our clients say about their experience with Marwa Crazy Cakes",
+  "reviews.sectionSubtitle":
+    "Hear what our clients say about their experience with Marwa Crazy Cakes",
   "reviews.googleLinkText": "★ Read More Reviews on Google ★",
   "pricing.title": "Cake Pricing",
   "pricing.eyebrow": "Thoughtfully designed for your special event",
-  "pricing.intro": "Our cakes and other goodies are thoughtfully designed for your special event and are individually priced. To give you an idea of what to expect, we have provided starting prices for each of our products.",
+  "pricing.intro":
+    "Our cakes and other goodies are thoughtfully designed for your special event and are individually priced. To give you an idea of what to expect, we have provided starting prices for each of our products.",
   "pricing.imageAlt": "Elegant wedding cake with multiple tiers and decorative elements",
   "pricing.quotePrompt": "Have something else in mind?",
   "pricing.quoteButton": "Get a quote",
+  "pricing.item.custom.label": "Custom Cakes",
+  "pricing.item.custom.price": "$150 & up",
+  "pricing.item.sculpted.label": "Sculpted Cakes",
+  "pricing.item.sculpted.price": "$300 & up",
+  "pricing.item.wedding.label": "Wedding Cakes",
+  "pricing.item.wedding.price": "$500 & up",
+  "pricing.item.cupcakes.label": "Cupcakes (per dozen)",
+  "pricing.item.cupcakes.price": "$40 & up",
   "contact.title": "Let's Create Something Beautiful",
   "contact.eyebrow": "Ready to bring your vision to life",
-  "contact.intro": "Get in touch to discuss your custom cake needs. We're excited to be part of your special celebration.",
+  "contact.intro":
+    "Get in touch to discuss your custom cake needs. We're excited to be part of your special celebration.",
   "contact.sidebarHeading": "Get in Touch",
   "contact.followUs": "Follow Us",
-  "contact.responseNote": "We'll respond to your inquiry within 24 hours. For urgent requests, please call us directly.",
+  "contact.responseNote":
+    "We'll respond to your inquiry within 24 hours. For urgent requests, please call us directly.",
   "contact.appHeading": "Get Our App",
-  "contact.appBody": "Download the Maarwa Crazy Cakes app for a seamless ordering experience.",
+  "contact.appBody": "Download the Marwa Crazy Cakes app for a seamless ordering experience.",
   "contact.appStoreLabel": "App Store",
   "contact.googlePlayLabel": "Google Play",
+  "contact.email": "fcabakery@gmail.com",
+  "contact.phone": "216.571.8440",
+  "contact.phoneHref": "12165718440",
+  "contact.address": "Chagrin Falls, OH 44022",
+  "contact.serviceArea":
+    "Serving Bainbridge, Solon, Pepper Pike, Twinsburg, Mayfield and nearby areas",
+  "gallery.title": "Our Gallery",
+  "gallery.eyebrow": "Portfolio of custom creations",
+  "gallery.description":
+    "Explore our portfolio of custom creations, each one unique and crafted with passion. From intimate celebrations to grand events, see how we bring visions to life.",
+  "gallery.categoriesLabel": "Gallery categories",
+  "gallery.allCategory": "All",
+  "gallery.empty": "No cakes in this category yet — check back soon!",
+  "gallery.paginationLabel": "Gallery pagination",
+  "gallery.previous": "‹ Previous",
+  "gallery.next": "Next ›",
+  "gallery.pageStatus": "Page {page} of {pageCount} · {total} cakes",
+  "gallery.videoTitle": "Watch the Craft",
+  "gallery.videoEyebrow": "A closer look at the studio",
+  "gallery.videoDescription":
+    "See the details, textures, and finishing touches behind our edible art.",
+  "gallery.ctaText": "Ready to create your own masterpiece?",
+  "gallery.ctaLabel": "Start Your Custom Order",
+  "gallery.closeImage": "Close",
+  "gallery.previousImage": "Previous image",
+  "gallery.nextImage": "Next image",
+  "gallery.closeVideo": "Close video",
+  "gallery.previousVideo": "Previous video",
+  "gallery.nextVideo": "Next video",
 };
 
 function imageDimensions(srcPath) {
@@ -168,7 +219,9 @@ const db = new DatabaseSync(dbPath);
 db.exec(`
   DROP TABLE IF EXISTS content;
   DROP TABLE IF EXISTS event_types;
+  DROP TABLE IF EXISTS social_links;
   DROP TABLE IF EXISTS images;
+  DROP TABLE IF EXISTS videos;
   DROP TABLE IF EXISTS testimonials;
   DROP TABLE IF EXISTS categories;
 
@@ -188,6 +241,14 @@ db.exec(`
     height INTEGER,
     sort INTEGER NOT NULL DEFAULT 0,
     featured INTEGER NOT NULL DEFAULT 0
+  );
+
+  CREATE TABLE videos (
+    id INTEGER PRIMARY KEY,
+    src TEXT NOT NULL,
+    title TEXT NOT NULL,
+    category_id INTEGER NOT NULL REFERENCES categories(id),
+    sort INTEGER NOT NULL DEFAULT 0
   );
 
   CREATE TABLE testimonials (
@@ -212,7 +273,17 @@ db.exec(`
     sort INTEGER NOT NULL DEFAULT 0
   );
 
+  CREATE TABLE social_links (
+    id INTEGER PRIMARY KEY,
+    label TEXT NOT NULL UNIQUE,
+    href TEXT NOT NULL,
+    icon TEXT NOT NULL,
+    sort INTEGER NOT NULL DEFAULT 0,
+    active INTEGER NOT NULL DEFAULT 1
+  );
+
   CREATE INDEX idx_images_category ON images(category_id);
+  CREATE INDEX idx_videos_category ON videos(category_id);
 `);
 
 const categoryOrder = [...new Set(galleryItems.map((item) => item.category))];
@@ -242,6 +313,13 @@ galleryItems.forEach((item, index) => {
   );
 });
 
+const insertVideo = db.prepare(
+  "INSERT INTO videos (src, title, category_id, sort) VALUES (?, ?, ?, ?)",
+);
+videoItems.forEach((item, index) => {
+  insertVideo.run(item.src, item.title, categoryIds.get(item.category), index);
+});
+
 const insertTestimonial = db.prepare(
   "INSERT INTO testimonials (author, initials, review_date, quote, rating, published, sort) VALUES (?, ?, ?, ?, ?, ?, ?)",
 );
@@ -259,9 +337,34 @@ for (const [key, value] of Object.entries(content)) {
 const insertEventType = db.prepare("INSERT INTO event_types (label, sort) VALUES (?, ?)");
 eventTypes.forEach((label, index) => insertEventType.run(label, index));
 
+const socialProfiles = [
+  {
+    label: "Instagram",
+    href: "https://www.instagram.com/marwacrazycakes/",
+    icon: "instagram",
+    sort: 0,
+  },
+  {
+    label: "Facebook",
+    href: "https://www.facebook.com/marwacrazycakes",
+    icon: "facebook",
+    sort: 1,
+  },
+  { label: "TikTok", href: "https://www.tiktok.com/@marwacrazycakes", icon: "tiktok", sort: 2 },
+  { label: "X", href: "https://x.com/marwacrazycakes", icon: "x", sort: 3 },
+];
+
+const insertSocialLink = db.prepare(
+  "INSERT INTO social_links (label, href, icon, sort, active) VALUES (?, ?, ?, ?, ?)",
+);
+socialProfiles.forEach((profile) =>
+  insertSocialLink.run(profile.label, profile.href, profile.icon, profile.sort, 1),
+);
+
 const counts = {
   categories: db.prepare("SELECT COUNT(*) AS n FROM categories").get().n,
   images: db.prepare("SELECT COUNT(*) AS n FROM images").get().n,
+  videos: db.prepare("SELECT COUNT(*) AS n FROM videos").get().n,
   testimonials: db.prepare("SELECT COUNT(*) AS n FROM testimonials").get().n,
   content: db.prepare("SELECT COUNT(*) AS n FROM content").get().n,
   eventTypes: db.prepare("SELECT COUNT(*) AS n FROM event_types").get().n,
@@ -270,5 +373,5 @@ const counts = {
 db.close();
 console.log(`Seeded ${dbPath}`);
 console.log(
-  `categories=${counts.categories} images=${counts.images} testimonials=${counts.testimonials} content=${counts.content} eventTypes=${counts.eventTypes}`,
+  `categories=${counts.categories} images=${counts.images} videos=${counts.videos} testimonials=${counts.testimonials} content=${counts.content} eventTypes=${counts.eventTypes}`,
 );

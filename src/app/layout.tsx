@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 
 import { SiteFooter } from "@/app/site-footer";
 import { SiteHeader } from "@/app/site-header";
+import { versionedImageUrl } from "@/lib/image-url";
 
 import "./globals.css";
 
@@ -31,7 +32,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         />
       </head>
       <body className="bg-background text-foreground">
-        <SiteHeader />
+        <SiteHeader logoSrc={versionedImageUrl("/assets/crazy/logo.png")} />
         <main className="overflow-x-hidden pt-[76px] sm:pt-[88px]">{children}</main>
         <SiteFooter />
       </body>

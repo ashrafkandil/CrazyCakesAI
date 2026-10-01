@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { SocialLinks } from "@/app/social-links";
+import { versionedImageUrl } from "@/lib/image-url";
 
 export function SiteFooter() {
   return (
@@ -14,11 +15,11 @@ export function SiteFooter() {
             className="shrink-0 rounded-full transition-transform hover:scale-105"
           >
             <Image
-              src="/assets/crazy/logo.png"
+              src={versionedImageUrl("/assets/crazy/logo.png")}
               alt="Marwa Crazy Cakes"
-              width={80}
-              height={80}
-              className="h-20 w-20 rounded-full bg-background object-contain"
+              width={96}
+              height={96}
+              className="h-24 w-24 rounded-full bg-background object-contain"
             />
           </Link>
           <div>
@@ -30,7 +31,6 @@ export function SiteFooter() {
         </div>
         <div className="text-center text-sm opacity-75 sm:text-right">
           <SocialLinks className="mb-4 justify-center sm:justify-end" />
-          <p>Chagrin Falls, Ohio</p>
           <p className="mt-2">© 2026 Marwa Crazy Cakes. All rights reserved.</p>
         </div>
       </div>
