@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
+import { AvatarWidget } from "@/app/assistant/avatar-widget";
 import { SiteFooter } from "@/app/site-footer";
 import { SiteHeader } from "@/app/site-header";
 import { versionedImageUrl } from "@/lib/image-url";
@@ -35,6 +36,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <SiteHeader logoSrc={versionedImageUrl("/assets/crazy/logo.png")} />
         <main className="overflow-x-hidden pt-[76px] sm:pt-[88px]">{children}</main>
         <SiteFooter />
+        <AvatarWidget />
       </body>
     </html>
   );

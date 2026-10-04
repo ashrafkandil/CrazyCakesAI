@@ -223,3 +223,62 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/* AI assistant avatar animations */
+@keyframes avatar-talk {
+  0%,
+  100% {
+    transform: scaleY(0.3);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+@keyframes avatar-blink {
+  0%,
+  93%,
+  100% {
+    transform: scaleY(1);
+  }
+  96% {
+    transform: scaleY(0.1);
+  }
+}
+@keyframes avatar-dot {
+  0%,
+  80%,
+  100% {
+    opacity: 0.3;
+    transform: translateY(0);
+  }
+  40% {
+    opacity: 1;
+    transform: translateY(-2px);
+  }
+}
+.avatar-mouth-talking {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: avatar-talk 0.24s ease-in-out infinite;
+}
+.avatar-eye {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: avatar-blink 4.5s ease-in-out infinite;
+}
+.avatar-dot {
+  animation: avatar-dot 1.2s ease-in-out infinite;
+}
+.avatar-dot-2 {
+  animation-delay: 0.15s;
+}
+.avatar-dot-3 {
+  animation-delay: 0.3s;
+}
+@media (prefers-reduced-motion: reduce) {
+  .avatar-mouth-talking,
+  .avatar-eye,
+  .avatar-dot {
+    animation: none;
+  }
+}
