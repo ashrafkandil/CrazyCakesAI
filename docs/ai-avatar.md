@@ -24,13 +24,13 @@ and it answers out loud, opens the right gallery category or page, and pre-fills
 
 ## What it can do
 
-| Visitor says | Assistant does |
-| --- | --- |
-| "Show me wedding cakes" | Opens Gallery → Wedding and answers out loud |
-| "How much is a sculpted cake?" | Gives the starting price ($300 & up) and explains quotes |
-| "I need a birthday cake for 30 people on Nov 14" | Asks for missing details, then pre-fills the quote form |
-| "Where are you located?" | Answers from the site's own contact info |
-| Arabic (toggle 🌐) | Listens and replies in Arabic |
+| Visitor says                                     | Assistant does                                           |
+| ------------------------------------------------ | -------------------------------------------------------- |
+| "Show me wedding cakes"                          | Opens Gallery → Wedding and answers out loud             |
+| "How much is a sculpted cake?"                   | Gives the starting price ($300 & up) and explains quotes |
+| "I need a birthday cake for 30 people on Nov 14" | Asks for missing details, then pre-fills the quote form  |
+| "Where are you located?"                         | Answers from the site's own contact info                 |
+| Arabic (toggle 🌐)                               | Listens and replies in Arabic                            |
 
 All answers come from the site's SQLite content (`content`, `categories`, `event_types`,
 `testimonials`). Update the site's content and the assistant updates with it.
@@ -49,14 +49,14 @@ Browser (free)                                   Server (Next.js)               
 └──────────────────────────────┘
 ```
 
-| File | Purpose |
-| --- | --- |
-| `src/app/assistant/avatar-widget.tsx` | Floating chat panel, mic, voice, action runner |
-| `src/app/assistant/avatar-face.tsx` | 2D SVG avatar with blink/talk/listen/think states |
-| `src/app/api/assistant/route.ts` | Calls Gemini, validates output, rate-limits |
-| `src/lib/assistant/knowledge.ts` | Builds the system prompt from the site database |
-| `src/lib/assistant/shared.ts` | Shared types, page list, quote-draft helpers |
-| `src/app/contact/contact-form.tsx` | Accepts the assistant's pre-filled details; Send opens an email |
+| File                                  | Purpose                                                         |
+| ------------------------------------- | --------------------------------------------------------------- |
+| `src/app/assistant/avatar-widget.tsx` | Floating chat panel, mic, voice, action runner                  |
+| `src/app/assistant/avatar-face.tsx`   | 2D SVG avatar with blink/talk/listen/think states               |
+| `src/app/api/assistant/route.ts`      | Calls Gemini, validates output, rate-limits                     |
+| `src/lib/assistant/knowledge.ts`      | Builds the system prompt from the site database                 |
+| `src/lib/assistant/shared.ts`         | Shared types, page list, quote-draft helpers                    |
+| `src/app/contact/contact-form.tsx`    | Accepts the assistant's pre-filled details; Send opens an email |
 
 The API key stays on the server. The model can only trigger actions in an allow-list (known pages,
 real gallery categories, known quote fields), and every value is validated before it reaches the
