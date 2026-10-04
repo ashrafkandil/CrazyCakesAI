@@ -42,7 +42,7 @@ Browser (free)                                   Server (Next.js)               
 ┌──────────────────────────────┐   POST          ┌─────────────────────────┐     ┌──────────────┐
 │ avatar-widget.tsx            │ /api/assistant  │ api/assistant/route.ts  │ ──▶ │ Gemini 2.5   │
 │  • SVG avatar (avatar-face)  │ ──────────────▶ │  • knowledge from DB    │     │ Flash / Lite │
-│  • Mic: Web Speech API       │                 │  • JSON-schema output   │ ◀── │              │
+│  • Mic: records a WAV clip   │                 │  • JSON-schema output   │ ◀── │              │
 │  • Voice: speechSynthesis    │ ◀────────────── │  • validates actions    │     └──────────────┘
 │  • Runs actions (navigate,   │ reply+actions   │  • rate limit, fallback │
 │    gallery, prefill quote)   │                 └─────────────────────────┘
@@ -62,6 +62,35 @@ The API key stays on the server. The model can only trigger actions in an allow-
 real gallery categories, known quote fields), and every value is validated before it reaches the
 browser.
 
+## Voice and welcome
+
+- **Welcome:** on the first visit, a bubble appears saying "Hi! Welcome to Marwa Crazy Cakes. How can I
+  help you today?" with **Talk** and **Type** buttons. It is spoken aloud. Browsers block sound until the
+  visitor's first click, tap or key press, so if it can't speak right away it greets on that first click.
+- **Talking:** tap 🎤 (or **Talk**). A level meter shows the mic is working ("Listening… speak now" →
+  "I hear you!"). It sends automatically after you pause, or tap ■ to send now. The audio goes to Gemini,
+  which transcribes and answers in one call. This works in Chrome, Edge, Safari and Firefox, with no
+  Google speech service needed. What it heard appears as your chat bubble.
+- The page must be opened at `http://localhost:3000` (or HTTPS) for the browser to allow the mic.
+
+## Troubleshooting
+
+Open <http://localhost:3000/api/assistant> while `bun run dev` is running. It reports whether
+`GEMINI_API_KEY` is loaded and which Gemini models work with your key. In dev, chat errors also show
+the exact reason from Gemini.
+
+| Problem                | Fix                                                                                  |
+| ---------------------- | ------------------------------------------------------------------------------------ |
+| "isn't set up yet"     | Add `GEMINI_API_KEY` to `.env.local`, then **stop and restart** `bun run dev`        |
+| "rejected the API key" | Create a new key at aistudio.google.com/apikey                                       |
+| "free-tier limit"      | Wait a minute; the free tier limits requests per minute and day                      |
+| Mic does nothing       | Allow the microphone (icon left of the address bar) and check the OS mic isn't muted |
+| No voice               | Check the 🔊 button in the chat header and your device volume                        |
+
+Google retires model versions over time. The route tries `gemini-2.5-flash`, `gemini-flash-latest`,
+`gemini-flash-lite-latest` and `gemini-3.5-flash-lite` in order, and remembers the first one that works.
+Set `GEMINI_MODEL` to pin a model.
+
 ## Contact form change
 
 Previously, "Send Inquiry" didn't send anything. It now opens the visitor's email app with a
@@ -73,12 +102,11 @@ this can be upgraded to a server-side email (e.g. Resend's free tier) or WhatsAp
 
 - **Gemini free tier:** enough for a small business site. Limits are per minute and per day and
   change over time; see <https://ai.google.dev/gemini-api/docs/rate-limits>. When the primary model
-  is busy, the route automatically falls back to `gemini-2.5-flash-lite`.
+  is busy, the route automatically falls back to other Flash models.
 - **Privacy note:** on the free tier, Google may use prompts to improve its products. Don't ask
   visitors for sensitive data beyond what the quote form needs. Turning on billing for the same key
   (pay-as-you-go, typically a few dollars a month at this traffic) removes that.
-- **Browser voice:** speech recognition works in Chrome and Edge (it uses the browser vendor's
-  online service). Firefox and Safari users can still type. Voice quality depends on the device.
+- **Browser voice:** the spoken reply uses the device's built-in voices, so quality varies by device.
 
 ## Customizing
 

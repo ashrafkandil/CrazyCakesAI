@@ -36,6 +36,8 @@ export type AssistantAction =
   | { type: "prefill_quote"; quote: QuoteDraft };
 
 export type AssistantReply = {
+  /** Transcript of the visitor's voice message, when they spoke instead of typing. */
+  heard?: string;
   reply: string;
   actions: AssistantAction[];
   suggestions: string[];

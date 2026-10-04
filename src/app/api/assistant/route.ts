@@ -15,17 +15,26 @@ import {
 
 /**
  * POST /api/assistant — the AI avatar's brain.
- * Sends the conversation to Google Gemini (free tier friendly) and returns a spoken reply
- * plus safe, validated website actions. The API key never leaves the server.
+ * Sends the conversation (text or a short voice clip) to Google Gemini and returns a spoken
+ * reply plus safe, validated website actions. The API key never leaves the server.
+ *
+ * GET /api/assistant (dev only) — health check that tells you whether your key and models work.
  */
 
 export const dynamic = "force-dynamic";
 
-const DEFAULT_MODEL = "gemini-2.5-flash";
-const FALLBACK_MODEL = "gemini-2.5-flash-lite";
+/** Tried in order. Google retires model versions over time, so we fall back automatically. */
+const DEFAULT_MODELS = [
+  "gemini-2.5-flash",
+  "gemini-flash-latest",
+  "gemini-flash-lite-latest",
+  "gemini-3.5-flash-lite",
+];
 const MAX_TURNS = 12;
 const NONE = "none";
-const RETRYABLE = new Set([404, 429, 500, 502, 503, 504]);
+const IS_DEV = process.env["NODE_ENV"] !== "production";
+const VOICE_PROMPT =
+  'This is a voice message from the visitor. Write exactly what they said in "heard" (in the language they spoke), then reply to it. If it is silent or unclear, set "heard" to "" and kindly ask them to repeat.';
 
 /** Flat output fields from the model → quote form fields. */
 const QUOTE_OUTPUT_FIELDS = {
@@ -50,14 +59,25 @@ const requestSchema = z.object({
         text: z.string().trim().min(1).max(2000),
       }),
     )
-    .min(1)
-    .max(60),
+    .max(60)
+    .default([]),
+  audio: z
+    .object({
+      mimeType: z.literal("audio/wav"),
+      data: z
+        .string()
+        .min(100)
+        .max(2_500_000)
+        .regex(/^[A-Za-z0-9+/=]+$/),
+    })
+    .optional(),
   page: z.string().max(200).optional(),
   lang: z.enum(["en", "ar"]).optional(),
 });
 
 const optionalText = z.string().nullish();
 const modelOutputSchema = z.object({
+  heard: optionalText,
   reply: z.string().min(1),
   navigate_to: optionalText,
   gallery_category: optionalText,
@@ -99,11 +119,42 @@ function isRateLimited(key: string): boolean {
   return limited;
 }
 
+// --- Model selection ----------------------------------------------------------------------
+let preferredModel: string | undefined;
+const unavailableModels = new Set<string>();
+
+function modelChain(): string[] {
+  const configured = [
+    process.env["GEMINI_MODEL"],
+    process.env["GEMINI_FALLBACK_MODEL"],
+    ...DEFAULT_MODELS,
+  ]
+    .map((model) => model?.trim())
+    .filter((model): model is string => Boolean(model));
+  const models = [...new Set(configured)].filter((model) => !unavailableModels.has(model));
+  if (preferredModel && models.includes(preferredModel)) {
+    return [preferredModel, ...models.filter((model) => model !== preferredModel)];
+  }
+  return models.length ? models : [...new Set(configured)];
+}
+
+/** Keep replies fast: 2.5 models take a thinking budget, newer ones a thinking level. */
+function thinkingConfig(model: string) {
+  if (model.includes("2.5")) return { thinkingBudget: 0 };
+  if (/^gemini-(\d|flash|pro)/.test(model)) return { thinkingLevel: "low" };
+  return undefined;
+}
+
+function isKeyProblem(status: number, message: string) {
+  return status === 401 || status === 403 || (status === 400 && /api[ _]?key/i.test(message));
+}
+
 // --- Gemini -------------------------------------------------------------------------------
 /** A flat schema: nested objects made small models loop, so every field is top-level. */
 function responseSchema(categorySlugs: string[], eventTypes: string[]) {
   const text = { type: "STRING" };
   const properties: Record<string, unknown> = {
+    heard: { type: "STRING", description: "Transcript of a voice message, otherwise empty" },
     reply: { type: "STRING", description: "Spoken reply, 1-3 short sentences" },
     navigate_to: { type: "STRING", enum: [NONE, ...SITE_PAGES.map((page) => page.path)] },
     gallery_category: { type: "STRING", enum: [NONE, ...categorySlugs] },
@@ -131,7 +182,7 @@ async function callGemini(model: string, apiKey: string, payload: unknown): Prom
       method: "POST",
       headers: { "content-type": "application/json", "x-goog-api-key": apiKey },
       body: JSON.stringify(payload),
-      signal: AbortSignal.timeout(25_000),
+      signal: AbortSignal.timeout(30_000),
       cache: "no-store",
     });
     const data = (await response.json().catch(() => ({}))) as GeminiResponse;
@@ -154,8 +205,29 @@ async function callGemini(model: string, apiKey: string, payload: unknown): Prom
     }
     return { ok: true, text };
   } catch (error) {
-    return { ok: false, status: 504, message: error instanceof Error ? error.message : "timeout" };
+    const cause = error instanceof Error ? error.message : "network error";
+    return { ok: false, status: 504, message: `Could not reach Gemini: ${cause}` };
   }
+}
+
+async function generate(
+  model: string,
+  apiKey: string,
+  payload: Record<string, unknown>,
+  generationConfig: Record<string, unknown>,
+): Promise<GeminiResult> {
+  const thinking = thinkingConfig(model);
+  const first = await callGemini(model, apiKey, {
+    ...payload,
+    generationConfig: thinking
+      ? { ...generationConfig, thinkingConfig: thinking }
+      : generationConfig,
+  });
+  // Some models reject a thinking setting; retry once without it.
+  if (!first.ok && first.status === 400 && thinking && !isKeyProblem(400, first.message)) {
+    return callGemini(model, apiKey, { ...payload, generationConfig });
+  }
+  return first;
 }
 
 // --- Validation of what the model asked us to do ---------------------------------------
@@ -181,10 +253,16 @@ function normalize(
   raw: string,
   categories: Map<string, string>,
   eventTypes: string[],
+  withAudio: boolean,
 ): AssistantReply | null {
   let parsed: unknown;
   try {
-    parsed = JSON.parse(raw);
+    parsed = JSON.parse(
+      raw
+        .trim()
+        .replace(/^```(?:json)?\s*/i, "")
+        .replace(/```$/, ""),
+    );
   } catch {
     return null;
   }
@@ -211,6 +289,7 @@ function normalize(
     actions.push({ type: "navigate", path: page.path });
   }
 
+  const heard = withAudio ? (output.heard ?? "").trim().slice(0, 500) : "";
   return {
     reply: output.reply.trim().slice(0, 600),
     actions,
@@ -218,11 +297,13 @@ function normalize(
       .map((item) => item.trim().slice(0, 60))
       .filter(Boolean)
       .slice(0, 3),
+    ...(heard ? { heard } : {}),
   };
 }
 
-function errorResponse(status: number, error: string) {
-  return Response.json({ error }, { status });
+function errorResponse(status: number, error: string, failures: string[] = []) {
+  const detail = IS_DEV && failures.length ? { detail: failures.join(" | ") } : {};
+  return Response.json({ error, ...detail }, { status });
 }
 
 export async function POST(request: Request) {
@@ -250,17 +331,34 @@ export async function POST(request: Request) {
   }
   const parsed = requestSchema.safeParse(body);
   if (!parsed.success) return errorResponse(400, "Invalid request.");
+  const { audio } = parsed.data;
 
   const turns = parsed.data.messages.slice(-MAX_TURNS);
   while (turns[0]?.role === "assistant") turns.shift();
-  if (turns.at(-1)?.role !== "user") return errorResponse(400, "Invalid request.");
+  if (!audio && turns.at(-1)?.role !== "user") return errorResponse(400, "Invalid request.");
+
+  const contents: { role: "user" | "model"; parts: Record<string, unknown>[] }[] = turns.map(
+    (turn) => ({
+      role: turn.role === "assistant" ? "model" : "user",
+      parts: [{ text: turn.text }],
+    }),
+  );
+  if (audio) {
+    contents.push({
+      role: "user",
+      parts: [
+        { inlineData: { mimeType: audio.mimeType, data: audio.data } },
+        { text: VOICE_PROMPT },
+      ],
+    });
+  }
 
   const categories = getAssistantCategories();
   const eventTypes = getAssistantEventTypes();
   const categoryTitles = new Map(categories.map((item) => [item.slug, item.title]));
   const generationConfig = {
     temperature: 0.5,
-    maxOutputTokens: 800,
+    maxOutputTokens: 1000,
     responseMimeType: "application/json",
     responseSchema: responseSchema(
       categories.map((category) => category.slug),
@@ -278,46 +376,79 @@ export async function POST(request: Request) {
         },
       ],
     },
-    contents: turns.map((turn) => ({
-      role: turn.role === "assistant" ? "model" : "user",
-      parts: [{ text: turn.text }],
-    })),
+    contents,
   };
 
-  const models = [
-    ...new Set([
-      process.env["GEMINI_MODEL"] || DEFAULT_MODEL,
-      process.env["GEMINI_FALLBACK_MODEL"] || FALLBACK_MODEL,
-    ]),
-  ];
+  const forced = IS_DEV ? new URL(request.url).searchParams.get("model") : null;
+  const failures: string[] = [];
+  let sawRateLimit = false;
 
-  let lastStatus = 502;
-  for (const model of models) {
-    // Gemini 2.5 models "think" by default; turning it off keeps replies fast and cheap.
-    const config = model.startsWith("gemini-2.5")
-      ? { ...generationConfig, thinkingConfig: { thinkingBudget: 0 } }
-      : generationConfig;
-    const result = await callGemini(model, apiKey, { ...payload, generationConfig: config });
+  for (const model of forced ? [forced] : modelChain()) {
+    const result = await generate(model, apiKey, payload, generationConfig);
     if (result.ok) {
-      const reply = normalize(result.text, categoryTitles, eventTypes);
-      if (reply) return Response.json(reply);
+      const reply = normalize(result.text, categoryTitles, eventTypes, Boolean(audio));
+      if (reply) {
+        preferredModel = model;
+        return Response.json(reply);
+      }
+      failures.push(`${model}: unusable output`);
       console.warn(`[assistant] ${model} returned unusable output: ${result.text.slice(0, 200)}`);
-      lastStatus = 502;
       continue;
     }
-    lastStatus = result.status;
+    failures.push(`${model}: ${result.status} ${result.message.slice(0, 160)}`);
     console.warn(`[assistant] ${model} failed (${result.status}): ${result.message}`);
-    if (!RETRYABLE.has(result.status)) break;
+    if (isKeyProblem(result.status, result.message)) {
+      return errorResponse(
+        502,
+        "Gemini rejected the API key. Check GEMINI_API_KEY in .env.local and restart the dev server.",
+        failures,
+      );
+    }
+    if (result.status === 404) unavailableModels.add(model);
+    if (result.status === 429) sawRateLimit = true;
   }
 
-  if (lastStatus === 429) {
+  if (sawRateLimit) {
     return errorResponse(
       429,
       "I'm a little busy right now (free-tier limit). Please try again in a minute.",
+      failures,
     );
   }
-  if (lastStatus === 400 || lastStatus === 401 || lastStatus === 403) {
-    return errorResponse(502, "Gemini rejected the request. Check that GEMINI_API_KEY is valid.");
+  return errorResponse(
+    502,
+    "Sorry, I couldn't get an answer just now. Please try again.",
+    failures,
+  );
+}
+
+type HealthResult =
+  { model: string; ok: true } | { model: string; ok: false; status: number; error: string };
+
+export async function GET(request: Request) {
+  if (!IS_DEV) return errorResponse(404, "Not found.");
+  const apiKey = process.env["GEMINI_API_KEY"]?.trim();
+  if (!apiKey) {
+    return Response.json({
+      ok: false,
+      keyConfigured: false,
+      hint: "Add GEMINI_API_KEY=your-key to .env.local, then stop and restart `bun run dev`.",
+    });
   }
-  return errorResponse(502, "Sorry, I got a little muddled. Could you say that again?");
+  const forced = new URL(request.url).searchParams.get("model");
+  const results: HealthResult[] = [];
+  for (const model of forced ? [forced] : modelChain()) {
+    const result = await generate(
+      model,
+      apiKey,
+      { contents: [{ role: "user", parts: [{ text: "Reply with just: OK" }] }] },
+      { maxOutputTokens: 200 },
+    );
+    results.push(
+      result.ok
+        ? { model, ok: true }
+        : { model, ok: false, status: result.status, error: result.message.slice(0, 300) },
+    );
+  }
+  return Response.json({ ok: results.some((item) => item.ok), keyConfigured: true, results });
 }

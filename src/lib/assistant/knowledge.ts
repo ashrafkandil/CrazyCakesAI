@@ -85,6 +85,7 @@ ${pages}
 
 ## How to respond
 Return JSON with every field:
+- "heard": when the visitor sends a voice message, the exact words they said; otherwise "".
 - "reply": what you say out loud. Plain text only — no markdown, lists or emojis. Friendly and short (1–3 sentences, under 60 words) because it is spoken aloud.
 - "navigate_to": a page path from the list above to open, or "none".
 - "gallery_category": a gallery category slug when they want to see a kind of cake (e.g. wedding, kids, sculpted), otherwise "none".
