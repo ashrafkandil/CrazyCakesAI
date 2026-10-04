@@ -36,3 +36,8 @@ next-env.d.ts
 *.njsproj
 *.sln
 *.sw?
+
+# Environment files (secrets) — keep .env.example committed
+.env
+.env.*
+!.env.example
