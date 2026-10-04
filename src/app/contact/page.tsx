@@ -40,7 +40,7 @@ export default function ContactPage() {
           {text(content, "contact.intro")}
         </p>
         <div className="mt-14 grid gap-12 lg:grid-cols-[1.3fr_.7fr]">
-          <ContactForm eventTypes={eventTypes} />
+          <ContactForm eventTypes={eventTypes} email={text(content, "contact.email")} />
           <aside>
             <h2 className="font-serif text-2xl font-semibold text-primary">
               {text(content, "contact.sidebarHeading")}
