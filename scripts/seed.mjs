@@ -1,11 +1,8 @@
 import { DatabaseSync } from "node:sqlite";
-import { mkdirSync, readFileSync, existsSync, readdirSync, rmSync } from "node:fs";
+import { mkdirSync, readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 
-const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const dbDir = path.join(root, "data");
-const dbPath = path.join(dbDir, "crazy-cakes.db");
+import { dbPath, root } from "./db-path.mjs";
 
 const imageAssetDir = path.join(root, "public", "assets", "crazy");
 const imageExtensions = new Set([".jpg", ".jpeg", ".png", ".webp", ".gif"]);
@@ -208,13 +205,59 @@ function slugify(title) {
     .replace(/^-|-$/g, "");
 }
 
-mkdirSync(dbDir, { recursive: true });
-for (const suffix of ["", "-wal", "-shm"]) {
-  const file = dbPath + suffix;
-  if (existsSync(file)) rmSync(file);
-}
+mkdirSync(path.dirname(dbPath), { recursive: true });
+
+const force = process.argv.slice(2).some((arg) => arg === "--force" || arg === "-f");
 
 const db = new DatabaseSync(dbPath);
+
+// busy_timeout makes a brief conflict wait instead of throwing "database is locked".
+db.exec("PRAGMA busy_timeout = 5000");
+
+// The database is the source of truth, so seeding is a one-time bootstrap.
+// Preserve edits in any application table, not only categories.
+const applicationTables = [
+  "categories",
+  "images",
+  "videos",
+  "testimonials",
+  "content",
+  "event_types",
+  "social_links",
+];
+function hasApplicationData() {
+  const existingTables = new Set(
+    db
+      .prepare("SELECT name FROM sqlite_master WHERE type = 'table'")
+      .all()
+      .map(({ name }) => name),
+  );
+  return applicationTables.some(
+    (table) => existingTables.has(table) && db.prepare(`SELECT 1 FROM "${table}" LIMIT 1`).get(),
+  );
+}
+
+function leaveExistingDatabaseUntouched() {
+  db.close();
+  console.log(`Database already has application data at ${dbPath}; leaving it untouched.`);
+  console.log('Run "bun run db:seed:force" to reset it back to the seed data.');
+  process.exit(0);
+}
+
+if (hasApplicationData() && !force) {
+  leaveExistingDatabaseUntouched();
+}
+
+// WAL lets the running site read while this script writes.
+db.exec("PRAGMA journal_mode = WAL");
+db.exec("BEGIN IMMEDIATE");
+
+// Recheck while holding the write lock so an external editor cannot add data
+// between the initial check and the seed transaction.
+if (hasApplicationData() && !force) {
+  db.exec("COMMIT");
+  leaveExistingDatabaseUntouched();
+}
 
 db.exec(`
   DROP TABLE IF EXISTS content;
@@ -370,8 +413,9 @@ const counts = {
   eventTypes: db.prepare("SELECT COUNT(*) AS n FROM event_types").get().n,
 };
 
+db.exec("COMMIT");
 db.close();
-console.log(`Seeded ${dbPath}`);
+console.log(`${force ? "Reset" : "Seeded"} ${dbPath}`);
 console.log(
   `categories=${counts.categories} images=${counts.images} videos=${counts.videos} testimonials=${counts.testimonials} content=${counts.content} eventTypes=${counts.eventTypes}`,
 );

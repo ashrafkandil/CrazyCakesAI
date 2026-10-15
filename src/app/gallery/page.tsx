@@ -18,8 +18,6 @@ export function generateMetadata(): Metadata {
   };
 }
 
-export const revalidate = 300;
-
 type SearchParams = Promise<{ cat?: string; page?: string; shuffle?: string }>;
 
 function hrefFor(category: string, page: number, shuffle?: string) {

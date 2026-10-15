@@ -282,3 +282,85 @@
     animation: none;
   }
 }
+
+/*
+ * Intro: on first paint the assistant flies in from the center of the screen to
+ * its bottom-right corner, with an "AI assistance" balloon riding along. The
+ * widget's box stays launcher-sized because the balloon is taken out of flow
+ * (absolute), which keeps the transform's center aligned with the launcher. The
+ * JS drops `.is-intro` once the flight ends (see INTRO_MS in avatar-widget.tsx).
+ */
+.assistant-widget {
+  --assistant-gap: 1rem;
+  --assistant-launcher-size: 4rem;
+}
+
+.assistant-widget.is-intro {
+  animation: assistant-intro-flight 2.6s cubic-bezier(0.33, 0, 0.2, 1) both;
+}
+
+.assistant-intro-balloon {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 14px);
+  padding: 0.45rem 0.8rem;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  border-bottom-right-radius: 4px;
+  background: var(--color-primary);
+  color: var(--color-primary-foreground);
+  font-size: 0.82rem;
+  font-weight: 600;
+  white-space: nowrap;
+  box-shadow: 0 12px 24px -16px rgb(0 0 0 / 0.5);
+  animation: assistant-intro-balloon-in 0.35s ease-out both;
+}
+
+.assistant-intro-balloon::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  right: 18px;
+  border: 6px solid transparent;
+  border-top-color: var(--color-primary);
+}
+
+/* Moves the widget from the viewport center to its natural bottom-right spot,
+   fading in near the start so it feels like an arrival. The start offset adds
+   back the corner gap and half the launcher so the avatar's own center lands on
+   the screen center (not its top-left corner). */
+@keyframes assistant-intro-flight {
+  0% {
+    transform: translate(
+      calc(-50vw + var(--assistant-gap) + var(--assistant-launcher-size) / 2),
+      calc(-50vh + var(--assistant-gap) + var(--assistant-launcher-size) / 2)
+    );
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(0, 0);
+    opacity: 1;
+  }
+}
+
+@keyframes assistant-intro-balloon-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Skip the flight; just show the avatar in place. */
+  .assistant-widget.is-intro,
+  .assistant-intro-balloon {
+    animation: none !important;
+  }
+}

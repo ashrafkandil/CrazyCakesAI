@@ -1,11 +1,10 @@
 import { DatabaseSync } from "node:sqlite";
 import { readdirSync } from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 
-const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+import { dbPath, root } from "./db-path.mjs";
+
 const imageRoot = path.join(root, "public", "assets", "crazy");
-const dbPath = path.join(root, "data", "crazy-cakes.db");
 const imageExtensions = new Set([".jpg", ".jpeg", ".png", ".webp", ".gif"]);
 
 const categories = readdirSync(imageRoot, { withFileTypes: true })
@@ -23,6 +22,7 @@ const imageCount = categories.reduce((count, category) => count + category.files
 if (imageCount === 0) throw new Error(`No gallery images found under ${imageRoot}`);
 
 const db = new DatabaseSync(dbPath);
+db.exec("PRAGMA journal_mode = WAL");
 db.exec("PRAGMA busy_timeout = 10000");
 
 try {

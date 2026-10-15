@@ -15,8 +15,6 @@ export const metadata: Metadata = {
   alternates: { canonical: "/pricing" },
 };
 
-export const revalidate = 300;
-
 export default function PricingPage() {
   const content = getContent();
   const priceItems = ["custom", "sculpted", "wedding", "cupcakes"] as const;

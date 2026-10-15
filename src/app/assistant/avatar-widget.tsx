@@ -1,16 +1,6 @@
 "use client";
 
-import {
-  Keyboard,
-  Languages,
-  Mic,
-  RotateCcw,
-  Send,
-  Square,
-  Volume2,
-  VolumeX,
-  X,
-} from "lucide-react";
+import { Languages, Mic, RotateCcw, Send, Square, Volume2, VolumeX, X } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
 
@@ -40,14 +30,14 @@ type SpeakHooks = { onStart?: () => void; onBlocked?: () => void };
 
 const CHAT_KEY = "crazycakes:assistant-chat";
 const ARABIC = /[\u0600-\u06FF]/;
+/** Length of the intro flight from screen center to the corner (matches the CSS). */
+const INTRO_MS = 2600;
 
 const COPY = {
   en: {
     greeting: "Hi! Welcome to Marwa Crazy Cakes. How can I help you today?",
     starters: ["Show me wedding cakes", "How much is a custom cake?", "I need a birthday cake"],
     placeholder: "Type a message…",
-    talk: "Talk",
-    type: "Type",
     disclaimer: "AI assistant. It can make mistakes; final prices are confirmed by quote.",
     status: {
       idle: "Online · tap the mic and just talk",
@@ -74,8 +64,6 @@ const COPY = {
     greeting: "مرحباً! أهلاً بك في Marwa Crazy Cakes. كيف يمكنني مساعدتك اليوم؟",
     starters: ["أرني كعكات الزفاف", "كم سعر الكعكة المخصصة؟", "أحتاج كعكة عيد ميلاد"],
     placeholder: "اكتب رسالة…",
-    talk: "تحدث",
-    type: "اكتب",
     disclaimer: "مساعد ذكي وقد يخطئ؛ السعر النهائي يُؤكَّد عبر عرض السعر.",
     status: {
       idle: "متصلة · اضغط على الميكروفون وتحدث",
@@ -141,14 +129,18 @@ export function AvatarWidget() {
   const [voiceOn, setVoiceOn] = useState(true);
   const [notice, setNotice] = useState<string | null>(null);
   const [hydrated, setHydrated] = useState(false);
-  const [welcomeVisible, setWelcomeVisible] = useState(false);
+  // Intro: the avatar flies in from the center of the screen on first paint.
+  // Once the flight ends, `.is-intro` is dropped.
+  const [intro, setIntro] = useState(true);
+  // The welcome stays silent on load. It is spoken once per visit, on the
+  // visitor's first click on the avatar (browsers block sound before that anyway).
+  const [welcomed, setWelcomed] = useState(false);
 
   const messagesRef = useRef<ChatMessage[]>([]);
   const langRef = useRef<Lang>("en");
   const voiceOnRef = useRef(true);
   const voicesRef = useRef<SpeechSynthesisVoice[]>([]);
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
-  const speakRef = useRef<(text: string, hooks?: SpeakHooks) => void>(() => undefined);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -159,15 +151,13 @@ export function AvatarWidget() {
     onError: (code: VoiceError) => setNotice(COPY[langRef.current].voiceErrors[code]),
   });
 
-  // Restore the conversation after reloads, load voices, decide whether to greet.
+  // Restore the conversation after reloads, load voices.
   useEffect(() => {
-    let hasHistory = false;
     try {
       const saved = JSON.parse(sessionStorage.getItem(CHAT_KEY) ?? "null") as SavedChat | null;
       if (saved) {
         if (Array.isArray(saved.messages)) {
           const restored = saved.messages.filter((message) => !message.pending);
-          hasHistory = restored.length > 0;
           setMessages(restored);
         }
         if (saved.lang === "ar" || saved.lang === "en") setLang(saved.lang);
@@ -184,7 +174,6 @@ export function AvatarWidget() {
       loadVoices();
       synth.addEventListener("voiceschanged", loadVoices);
     }
-    setWelcomeVisible(!hasHistory);
     setHydrated(true);
     return () => {
       if ("speechSynthesis" in window) window.speechSynthesis.cancel();
@@ -205,36 +194,14 @@ export function AvatarWidget() {
     }
   }, [hydrated, messages, lang, voiceOn]);
 
+  // Play the center-to-corner entrance once, then drop the intro styling so the
+  // launcher keeps its normal idle float and hover effects.
   useEffect(() => {
-    speakRef.current = speak;
-  });
-
-  // Spoken welcome. Browsers only allow speech after the visitor's first click, tap or key press,
-  // so we try right away and otherwise greet on that first interaction.
-  useEffect(() => {
-    if (!welcomeVisible) return;
-    let greeted = false;
-    const detach = () => {
-      window.removeEventListener("pointerdown", greet, true);
-      window.removeEventListener("keydown", greet, true);
-    };
-    function greet() {
-      if (greeted) return;
-      speakRef.current(COPY[langRef.current].greeting, {
-        onStart: () => {
-          greeted = true;
-          detach();
-        },
-      });
-    }
-    window.addEventListener("pointerdown", greet, true);
-    window.addEventListener("keydown", greet, true);
-    const timer = window.setTimeout(greet, 700);
-    return () => {
-      window.clearTimeout(timer);
-      detach();
-    };
-  }, [welcomeVisible]);
+    if (!intro) return;
+    const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    const timer = window.setTimeout(() => setIntro(false), reduceMotion ? 0 : INTRO_MS);
+    return () => window.clearTimeout(timer);
+  }, [intro]);
 
   useEffect(() => {
     if (recorder.recording) setMood("listening");
@@ -324,7 +291,6 @@ export function AvatarWidget() {
     stopSpeaking();
     setNotice(null);
     setSuggestions([]);
-    setWelcomeVisible(false);
     const history = messagesRef.current.filter((message) => !message.pending);
     const userMessage: ChatMessage = clip
       ? { id: uid(), role: "user", text: words.voicePending, pending: true }
@@ -389,15 +355,19 @@ export function AvatarWidget() {
   }
 
   function openChat() {
-    setWelcomeVisible(false);
     setOpen(true);
+    // Browsers only allow speech after a click, so the welcome is spoken here —
+    // on the first click on the avatar, once per visit, and only on a fresh chat.
+    if (!welcomed && messagesRef.current.length === 0) {
+      setWelcomed(true);
+      speak(COPY[langRef.current].greeting);
+    }
     window.setTimeout(() => inputRef.current?.focus(), 50);
   }
 
   function startListening() {
     stopSpeaking();
     setNotice(null);
-    setWelcomeVisible(false);
     setOpen(true);
     if (!isVoiceSupported()) {
       setNotice(copy.voiceErrors.unsupported);
@@ -437,7 +407,13 @@ export function AvatarWidget() {
     messages.length === 0 ? [{ id: "greeting", role: "assistant", text: copy.greeting }] : messages;
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 flex flex-col items-end gap-3 print:hidden">
+    <div
+      className={cn(
+        "assistant-widget fixed bottom-4 right-4 z-50 flex flex-col items-end gap-3 print:hidden",
+        intro && "is-intro",
+      )}
+    >
+      {intro ? <div className="assistant-intro-balloon">AI assistance</div> : null}
       {open ? (
         <section
           role="dialog"
@@ -631,43 +607,6 @@ export function AvatarWidget() {
       ) : null}
 
       <div className="flex items-end gap-3">
-        {welcomeVisible && !open ? (
-          <div
-            role="status"
-            className="w-[min(280px,calc(100vw-7rem))] rounded-2xl rounded-br-sm border border-border bg-background p-3 shadow-lg"
-          >
-            <div className="flex items-start gap-2">
-              <p dir="auto" className="flex-1 text-sm leading-5">
-                {copy.greeting}
-              </p>
-              <button
-                type="button"
-                onClick={() => {
-                  stopSpeaking();
-                  setWelcomeVisible(false);
-                }}
-                aria-label="Dismiss"
-                className="rounded p-0.5 text-muted-foreground hover:bg-muted"
-              >
-                <X className="h-3.5 w-3.5" />
-              </button>
-            </div>
-            <div className="mt-3 flex gap-2">
-              <Button type="button" size="sm" onClick={startListening} className="flex-1">
-                <Mic className="h-4 w-4" /> {copy.talk}
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                variant="secondary"
-                onClick={openChat}
-                className="flex-1"
-              >
-                <Keyboard className="h-4 w-4" /> {copy.type}
-              </Button>
-            </div>
-          </div>
-        ) : null}
         <button
           type="button"
           onClick={() => (open ? setOpen(false) : openChat())}

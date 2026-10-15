@@ -23,8 +23,6 @@ export const metadata: Metadata = {
   alternates: { canonical: "/contact" },
 };
 
-export const revalidate = 300;
-
 export default function ContactPage() {
   const content = getContent();
   const eventTypes = getEventTypes();

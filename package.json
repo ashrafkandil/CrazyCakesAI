@@ -8,8 +8,10 @@
     "dev:server": "next dev",
     "build": "next build",
     "start": "next start",
-    "db:seed": "node scripts/seed.mjs",
-    "db:import-images": "node scripts/import-gallery-images.mjs",
+    "db:seed": "node --env-file-if-exists=.env --env-file-if-exists=.env.local scripts/seed.mjs",
+    "db:seed:force": "node --env-file-if-exists=.env --env-file-if-exists=.env.local scripts/seed.mjs --force",
+    "db:import-images": "node --env-file-if-exists=.env --env-file-if-exists=.env.local scripts/import-gallery-images.mjs",
+    "db:backup": "node --env-file-if-exists=.env --env-file-if-exists=.env.local scripts/backup-db.mjs",
     "lint": "eslint .",
     "format": "prettier --write ."
   },

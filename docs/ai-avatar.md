@@ -33,7 +33,8 @@ and it answers out loud, opens the right gallery category or page, and pre-fills
 | Arabic (toggle 🌐)                               | Listens and replies in Arabic                            |
 
 All answers come from the site's SQLite content (`content`, `categories`, `event_types`,
-`testimonials`). Update the site's content and the assistant updates with it.
+`testimonials`). Update the site's content and the assistant updates with it — the database is the
+source of truth (see [Data and the database](../README.md#data-and-the-database)).
 
 ## How it works
 
@@ -64,9 +65,9 @@ browser.
 
 ## Voice and welcome
 
-- **Welcome:** on the first visit, a bubble appears saying "Hi! Welcome to Marwa Crazy Cakes. How can I
-  help you today?" with **Talk** and **Type** buttons. It is spoken aloud. Browsers block sound until the
-  visitor's first click, tap or key press, so if it can't speak right away it greets on that first click.
+- **Welcome:** on the first visit the chat opens with a "Hi! Welcome to Marwa Crazy Cakes. How can I
+  help you today?" bubble. It stays silent on load and is spoken aloud on the visitor's first click on
+  the avatar, once per visit — browsers block sound until that click anyway.
 - **Talking:** tap 🎤 (or **Talk**). A level meter shows the mic is working ("Listening… speak now" →
   "I hear you!"). It sends automatically after you pause, or tap ■ to send now. The audio goes to Gemini,
   which transcribes and answers in one call. This works in Chrome, Edge, Safari and Firefox, with no

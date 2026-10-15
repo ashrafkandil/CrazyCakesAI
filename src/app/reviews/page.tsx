@@ -13,8 +13,6 @@ export const metadata: Metadata = {
   alternates: { canonical: "/reviews" },
 };
 
-export const revalidate = 300;
-
 export default function ReviewsPage() {
   const content = getContent();
   const testimonials = getTestimonials();

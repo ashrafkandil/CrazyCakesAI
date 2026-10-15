@@ -25,8 +25,6 @@ export const metadata: Metadata = {
   alternates: { canonical: "/" },
 };
 
-export const revalidate = 300;
-
 const destinationConfig = [
   {
     id: "about",

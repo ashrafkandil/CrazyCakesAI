@@ -15,8 +15,6 @@ export const metadata: Metadata = {
   alternates: { canonical: "/about" },
 };
 
-export const revalidate = 300;
-
 export default function AboutPage() {
   const content = getContent();
 

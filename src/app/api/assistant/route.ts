@@ -23,12 +23,16 @@ import {
 
 export const dynamic = "force-dynamic";
 
-/** Tried in order. Google retires model versions over time, so we fall back automatically. */
+/**
+ * Tried in order. Google retires model versions over time, so we fall back automatically.
+ * Lite first: they answer in under a second on the free tier; the full Flash models can
+ * think for 30s+ which is too slow for a chat reply.
+ */
 const DEFAULT_MODELS = [
-  "gemini-2.5-flash",
-  "gemini-flash-latest",
   "gemini-flash-lite-latest",
   "gemini-3.5-flash-lite",
+  "gemini-flash-latest",
+  "gemini-3.8-flash",
 ];
 const MAX_TURNS = 12;
 const NONE = "none";
@@ -138,13 +142,6 @@ function modelChain(): string[] {
   return models.length ? models : [...new Set(configured)];
 }
 
-/** Keep replies fast: 2.5 models take a thinking budget, newer ones a thinking level. */
-function thinkingConfig(model: string) {
-  if (model.includes("2.5")) return { thinkingBudget: 0 };
-  if (/^gemini-(\d|flash|pro)/.test(model)) return { thinkingLevel: "low" };
-  return undefined;
-}
-
 function isKeyProblem(status: number, message: string) {
   return status === 401 || status === 403 || (status === 400 && /api[ _]?key/i.test(message));
 }
@@ -216,18 +213,7 @@ async function generate(
   payload: Record<string, unknown>,
   generationConfig: Record<string, unknown>,
 ): Promise<GeminiResult> {
-  const thinking = thinkingConfig(model);
-  const first = await callGemini(model, apiKey, {
-    ...payload,
-    generationConfig: thinking
-      ? { ...generationConfig, thinkingConfig: thinking }
-      : generationConfig,
-  });
-  // Some models reject a thinking setting; retry once without it.
-  if (!first.ok && first.status === 400 && thinking && !isKeyProblem(400, first.message)) {
-    return callGemini(model, apiKey, { ...payload, generationConfig });
-  }
-  return first;
+  return callGemini(model, apiKey, { ...payload, generationConfig });
 }
 
 // --- Validation of what the model asked us to do ---------------------------------------

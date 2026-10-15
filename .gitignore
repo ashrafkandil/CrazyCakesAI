@@ -17,10 +17,17 @@ out
 next-env.d.ts
 *.local
 
-# SQLite database (regenerate with: npm run db:seed)
+# SQLite database (regenerate with: bun run db:seed)
 /data/*.db
 /data/*.db-wal
 /data/*.db-shm
+/data/backups/
+
+# A database relocated with DB_PATH is runtime data too - never commit it.
+*.db
+*.db-wal
+*.db-shm
+*.db-journal
 
 # Wrangler / Cloudflare
 .wrangler/
