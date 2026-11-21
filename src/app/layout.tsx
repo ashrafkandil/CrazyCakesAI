@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
+import { ThemeProvider } from "@/lib/theme-context";
 import { AvatarWidget } from "@/app/assistant/avatar-widget";
 import { SiteFooter } from "@/app/site-footer";
 import { SiteHeader } from "@/app/site-header";
@@ -25,7 +26,7 @@ export const dynamic = "force-dynamic";
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
@@ -35,10 +36,12 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         />
       </head>
       <body className="bg-background text-foreground">
-        <SiteHeader logoSrc={versionedImageUrl("/assets/crazy/logo.png")} />
-        <main className="overflow-x-hidden pt-[76px] sm:pt-[88px]">{children}</main>
-        <SiteFooter />
-        <AvatarWidget />
+        <ThemeProvider>
+          <SiteHeader logoSrc={versionedImageUrl("/assets/crazy/logo.png")} />
+          <main className="overflow-x-hidden pt-[76px] sm:pt-[88px]">{children}</main>
+          <SiteFooter />
+          <AvatarWidget />
+        </ThemeProvider>
       </body>
     </html>
   );

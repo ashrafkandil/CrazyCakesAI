@@ -2,6 +2,25 @@ import { getDb } from "@/lib/db";
 import type { SiteContent } from "@/lib/content";
 import { versionedImageUrl } from "@/lib/image-url";
 
+export type Theme = {
+  id: number;
+  name: string;
+  primaryColor: string;
+  primaryForeground: string;
+  secondaryColor: string;
+  secondaryForeground: string;
+  background: string;
+  surface: string;
+  muted: string;
+  mutedForeground: string;
+  border: string;
+  gold: string;
+  overlay: string;
+  blush: string;
+  isDefault: boolean;
+  sort: number;
+};
+
 export type GalleryCategory = { id: number; slug: string; title: string; sort: number };
 
 export type GalleryImage = {
@@ -248,6 +267,98 @@ export function getEventTypes(): string[] {
   return rows.map((row) => row.label);
 }
 
+export function getThemes(): Theme[] {
+  const db = getDb();
+  const rows = db
+    .prepare(
+      "SELECT id, name, primary_color, primary_foreground, secondary_color, secondary_foreground, background, surface, muted, muted_foreground, border, gold, overlay, blush, is_default, sort FROM themes ORDER BY sort, id",
+    )
+    .all() as {
+      id: number;
+      name: string;
+      primary_color: string;
+      primary_foreground: string;
+      secondary_color: string;
+      secondary_foreground: string;
+      background: string;
+      surface: string;
+      muted: string;
+      muted_foreground: string;
+      border: string;
+      gold: string;
+      overlay: string;
+      blush: string;
+      is_default: number;
+      sort: number;
+    }[];
+
+  return rows.map((row) => ({
+    id: row.id,
+    name: row.name,
+    primaryColor: row.primary_color,
+    primaryForeground: row.primary_foreground,
+    secondaryColor: row.secondary_color,
+    secondaryForeground: row.secondary_foreground,
+    background: row.background,
+    surface: row.surface,
+    muted: row.muted,
+    mutedForeground: row.muted_foreground,
+    border: row.border,
+    gold: row.gold,
+    overlay: row.overlay,
+    blush: row.blush,
+    isDefault: row.is_default === 1,
+    sort: row.sort,
+  }));
+}
+
+export function getDefaultTheme(): Theme | null {
+  const db = getDb();
+  const row = db
+    .prepare(
+      "SELECT id, name, primary_color, primary_foreground, secondary_color, secondary_foreground, background, surface, muted, muted_foreground, border, gold, overlay, blush, is_default, sort FROM themes WHERE is_default = 1 LIMIT 1",
+    )
+    .get() as {
+      id: number;
+      name: string;
+      primary_color: string;
+      primary_foreground: string;
+      secondary_color: string;
+      secondary_foreground: string;
+      background: string;
+      surface: string;
+      muted: string;
+      muted_foreground: string;
+      border: string;
+      gold: string;
+      overlay: string;
+      blush: string;
+      is_default: number;
+      sort: number;
+    } | null;
+
+  if (!row) return null;
+
+  return {
+    id: row.id,
+    name: row.name,
+    primaryColor: row.primary_color,
+    primaryForeground: row.primary_foreground,
+    secondaryColor: row.secondary_color,
+    secondaryForeground: row.secondary_foreground,
+    background: row.background,
+    surface: row.surface,
+    muted: row.muted,
+    mutedForeground: row.muted_foreground,
+    border: row.border,
+    gold: row.gold,
+    overlay: row.overlay,
+    blush: row.blush,
+    isDefault: row.is_default === 1,
+    sort: row.sort,
+  };
+}
+
 export function getContent(): SiteContent {
   const db = getDb();
   const rows = db.prepare("SELECT key, value FROM content").all() as {
@@ -255,4 +366,18 @@ export function getContent(): SiteContent {
     value: string;
   }[];
   return Object.fromEntries(rows.map((row) => [row.key, row.value]));
+}
+
+export function getEmailNotificationsEnabled(): boolean {
+  const db = getDb();
+  try {
+    const row = db
+      .prepare(
+        "SELECT value FROM content WHERE key = 'settings.email_notifications' LIMIT 1",
+      )
+      .get() as { value: string } | undefined;
+    return row?.value === "1";
+  } catch {
+    return true; // Default to true for safety
+  }
 }

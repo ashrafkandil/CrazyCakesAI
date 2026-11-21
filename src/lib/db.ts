@@ -29,3 +29,18 @@ export function getDb() {
   }
   return instance;
 }
+
+/**
+ * A writable connection for server actions that mutate the database (e.g. saving a
+ * submitted review). Kept separate from the read-only singleton so the read path
+ * stays read-only and concurrent writes don't touch it. WAL mode lets the two
+ * coexist; busy_timeout makes a brief conflict wait instead of throwing.
+ */
+export function getWritableDb() {
+  if (!existsSync(dbPath)) {
+    throw new Error(`Database not found at ${dbPath}. Run "npm run db:seed" first.`);
+  }
+  const db = new DatabaseSync(dbPath);
+  db.exec("PRAGMA busy_timeout = 5000");
+  return db;
+}
