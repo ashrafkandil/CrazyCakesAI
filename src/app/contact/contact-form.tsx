@@ -1,6 +1,6 @@
 "use client";
 
-import { ImagePlus, Sparkles } from "lucide-react";
+import { ImagePlus, Sparkles, AlertCircle } from "lucide-react";
 import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -63,7 +63,8 @@ export function ContactForm({ eventTypes = [], email }: { eventTypes?: string[];
   }
 
   // No backend or paid email service needed: open the visitor's email app with the inquiry.
-  function submitForm(event: FormEvent<HTMLFormElement>) {
+  // Also send SMS notification to admin if enabled.
+  async function submitForm(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const subject = `Cake inquiry: ${form.eventType} on ${form.eventDate}`;
     const body = [
@@ -78,7 +79,28 @@ export function ContactForm({ eventTypes = [], email }: { eventTypes?: string[];
       "Theme / details:",
       form.theme,
     ].join("\n");
+
+    // Send email via mailto
     window.location.href = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+
+    // Also send SMS notification to admin if SMS notifications are enabled
+    try {
+      const response = await fetch("/api/contact/sms-notify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: form.name,
+          eventType: form.eventType,
+          eventDate: form.eventDate,
+        }),
+      });
+      if (!response.ok) {
+        console.warn("Failed to send SMS notification");
+      }
+    } catch (error) {
+      console.warn("SMS notification failed:", error);
+    }
+
     clearQuoteDraft();
     setSubmitted(true);
   }

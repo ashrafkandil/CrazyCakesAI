@@ -121,7 +121,7 @@ const content = {
   "reviews.sectionTitle": "Client Reviews",
   "reviews.sectionSubtitle":
     "Hear what our clients say about their experience with Marwa Crazy Cakes",
-  "reviews.googleLinkText": "★ Read More Reviews on Google ★",
+  "reviews.instagramLinkText": "★ Read More Reviews on Instagram ★",
   "pricing.title": "Cake Pricing",
   "pricing.eyebrow": "Thoughtfully designed for your special event",
   "pricing.intro":

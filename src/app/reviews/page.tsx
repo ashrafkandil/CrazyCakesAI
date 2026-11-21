@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 
+import { AddReviewDialog } from "@/app/reviews/add-review-dialog";
 import { Button } from "@/components/ui/button";
 import { text } from "@/lib/content";
 import { getContent, getTestimonials } from "@/lib/data";
@@ -77,16 +78,23 @@ export default function ReviewsPage() {
               </article>
             ))}
           </div>
-          <div className="mt-10 text-center">
+          <div className="mt-10 flex flex-col items-center gap-4 text-center sm:flex-row sm:justify-center">
             <Button asChild>
               <a
-                href="https://www.google.com/search?q=Marwa+Crazy+Cakes+Reviews"
+                href="https://www.instagram.com/marwacrazycakes/"
                 target="_blank"
                 rel="noreferrer"
               >
-                {text(content, "reviews.googleLinkText")}
+                {text(content, "reviews.instagramLinkText")}
               </a>
             </Button>
+            <AddReviewDialog
+              trigger={
+                <Button variant="secondary" type="button">
+                  Add a review
+                </Button>
+              }
+            />
           </div>
         </div>
       </section>
